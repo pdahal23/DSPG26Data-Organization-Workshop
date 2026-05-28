@@ -1,76 +1,84 @@
 ---
-title: "Organizing and Documenting Data Availability"
-subtitle: "Using R to Audit Your Data"
-author: "Pragati Dahal"
-institute: "Virginia Tech · Data Science for the Public Good"
-date: "June 5, 2026"
 format:
   revealjs:
-    theme: simple
-    logo: images/kohlcentre_logo.png
-    footer: "DSPG Summer 2026 · Virginia Tech"
+    theme: [default, workshop_styles.scss]
     slide-number: true
-    transition: fade
+    transition: slide
     background-transition: fade
-    highlight-style: github
-    code-line-numbers: false
-    fontsize: 1.1em
-    execute:
-      eval: false
-      echo: true
-    css: workshop_styles.css
+    footer: "DSPG 2026 | Virginia Tech"
+    width: 1280
+    height: 720
+    embed-resources: true
+    incremental: false
 ---
 
-## What Are We Building Today? {background-color="#861F41"}
+## {.title-custom data-menu-title="Data Availability Workshop"}
 
-::: {style="color: white; font-size: 0.95em;"}
+::: {.title-block}
+::: {.t-title}
+Organizing and Documenting Data Availability
+:::
+::: {.t-rule}
+:::
+::: {.t-authors}
+**Instructor:** Pragati Dahal
+:::
+::: {.t-program}
+Data Science for the Public Good · Summer 2026
+:::
+::: {.t-logos}
+![](images/kohlcentre_logo.png){height="70"}
+:::
+:::
+
+---
+
+## What Are We Building Today?
+
+::: {.scope-core}
+::: {.mini-heading}
 By the end of this workshop, you will be able to:
-
-<br>
-
-**Identify** which variables exist in your dataset across years
-
-**Audit** data availability programmatically in R
-
-**Document** your findings in a structured format
-
-**Visualize** the results as an interactive dashboard
+:::
+- **Identify** which variables exist in your dataset across years
+- **Audit** data availability programmatically in R
+- **Document** your findings in a structured, shareable format
+- **Visualize** the results as an interactive HTML dashboard
 :::
 
-::: {.notes}
-Open the finished HTML dashboard in browser before starting. Show it here.
+::: {.note}
+Before we start — open the finished dashboard in your browser. That is where we are going.
 :::
 
 ---
 
-## Where This Fits {background-color="#ffffff"}
+## Where This Fits in Your Project
 
-::: {style="font-size: 0.9em;"}
-**Before you clean your data, you need to know what you actually have.**
-
-If a variable only exists for 3 out of 14 years — you need to know that *before* you spend hours cleaning it.
+::: {.scope-core}
+::: {.mini-heading}
+The problem
+:::
+Before you clean your data, you need to know what you actually have.
+If a variable only exists for 7 out of 14 years — you need to know that *before* you spend hours cleaning it.
 :::
 
-<br>
-
-::: {style="font-size: 1em; text-align: center;"}
-Raw Data → **[YOU ARE HERE]** → Cleaning → Analysis → Report
+::: {.scope-conditional}
+::: {.mini-heading}
+Today's step
 :::
+**Raw Data → [YOU ARE HERE] → Cleaning → Analysis → Report**
 
-<br>
-
-::: {style="font-size: 0.85em; color: #861F41;"}
-Today's focus: the step between downloading data and cleaning it.
+The step between downloading data and cleaning it is usually skipped. Today we make it explicit.
 :::
 
 ---
 
-## tidycensus: Your Data Access Tool {background-color="#ffffff"}
+## tidycensus: Your Data Access Tool
 
-::: {style="font-size: 0.85em;"}
+::: {.scope-core}
+::: {.mini-heading}
 You set up your Census API key in the previous workshop. Now we use it.
-
-`tidycensus` gives you ACS data directly in R — no manual downloading.
+:::
+`tidycensus` gives you ACS data directly in R — no manual downloading required.
 :::
 
 ```r
@@ -88,18 +96,18 @@ get_acs(
 
 ---
 
-## Finding Variable Codes {background-color="#ffffff"}
+## Finding Variable Codes
 
-::: {style="font-size: 0.85em;"}
-ACS variables follow a pattern: **Table + Cell number**
-
+::: {.scope-core}
+::: {.mini-heading}
+ACS variables follow a pattern: Table + Cell number
+:::
 `B19013_001` = Table B19013 (Median Household Income), Cell 001
+
+Use `load_variables()` to search the full list:
 :::
 
-<br>
-
 ```r
-# Search the full variable list
 vars <- load_variables(2022, "acs5", cache = TRUE)
 View(vars)
 
@@ -109,13 +117,13 @@ vars |>
   select(name, label, concept)
 ```
 
-::: {style="font-size: 0.8em; color: #E5751F;"}
-💡 Always check the `concept` column — it tells you which table the variable belongs to.
+::: {.note}
+Always check the `concept` column — it tells you which table the variable belongs to.
 :::
 
 ---
 
-## Your First Data Pull {background-color="#ffffff"}
+## Your First Data Pull
 
 ```r
 va_income <- get_acs(
@@ -129,19 +137,22 @@ va_income <- get_acs(
 head(va_income)
 ```
 
-::: {style="font-size: 0.78em; background: #f3eeea; padding: 12px; border-radius: 6px; font-family: monospace;"}
-\# A tibble: 6 × 5<br>
-&nbsp;&nbsp;GEOID &nbsp;NAME &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; variable &nbsp;&nbsp;&nbsp;estimate &nbsp;&nbsp;&nbsp;moe<br>
-1 51001 &nbsp;Accomack County, Virginia &nbsp;&nbsp; B19013_001 &nbsp;&nbsp;52694 &nbsp;&nbsp;5883<br>
-2 51003 &nbsp;Albemarle County, Virginia &nbsp; B19013_001 &nbsp;&nbsp;97708 &nbsp;&nbsp;3686
+::: {.scope-core}
+::: {.mini-heading}
+Output
+:::
+Each row is one county. Five columns: `GEOID`, `NAME`, `variable`, `estimate`, `moe`
+
+- **estimate** = the ACS value
+- **moe** = margin of error
 :::
 
 ---
 
-## Pulling Multiple Years {background-color="#ffffff"}
+## Pulling Multiple Years
 
-::: {style="font-size: 0.85em;"}
-Use `map_dfr()` to loop over years and stack the results into one dataframe:
+::: {.note}
+`map_dfr()` means: run this function for each year, then stack all results into one dataframe.
 :::
 
 ```r
@@ -162,17 +173,9 @@ multi_year <- map_dfr(years, function(yr) {
 })
 ```
 
-::: {style="font-size: 0.8em; color: #861F41;"}
-`map_dfr()` = run this for each year, then stack all results into one dataframe.
-:::
-
 ---
 
-## The Problem: Not All Variables Exist {background-color="#ffffff"}
-
-::: {style="font-size: 0.85em;"}
-Try pulling broadband access for 2012:
-:::
+## The Problem: Not All Variables Exist
 
 ```r
 get_acs(
@@ -184,18 +187,21 @@ get_acs(
 )
 ```
 
-::: {style="font-size: 0.85em; margin-top: 20px;"}
-**You get an error.** ACS didn't track broadband at the county level before 2017.
+::: {.scope-core}
+::: {.mini-heading}
+You get an error
+:::
+ACS did not track broadband subscriptions at the county level before 2017.
 
-This is not a data error — it's measurement history. And you need to know this *before* you build your analysis.
+This is not a data error — it is measurement history. And you need to know this *before* you build your analysis panel.
 :::
 
 ---
 
-## The Audit Function {background-color="#ffffff"}
+## The Audit Function
 
-::: {style="font-size: 0.85em;"}
-Use `tryCatch()` to handle errors gracefully — returns `TRUE` if data exists, `FALSE` if not:
+::: {.note}
+`tryCatch()` lets R handle errors gracefully — instead of crashing, it returns `FALSE`.
 :::
 
 ```r
@@ -208,17 +214,19 @@ check_variable <- function(var, year) {
       year      = year,
       survey    = "acs5"
     )
-    nrow(result) > 0
-  }, error = function(e) FALSE)
+    nrow(result) > 0     # TRUE if data exists
+  }, error = function(e) {
+    FALSE                # FALSE if error
+  })
 }
 
-check_variable("B28002_004", 2012)  # FALSE
-check_variable("B28002_004", 2020)  # TRUE
+check_variable("B28002_004", 2012)   # FALSE
+check_variable("B28002_004", 2020)   # TRUE
 ```
 
 ---
 
-## Running the Full Audit {background-color="#ffffff"}
+## Running the Full Audit
 
 ```r
 vars <- c(
@@ -230,20 +238,20 @@ years <- 2010:2023
 
 audit_results <- expand_grid(variable = vars, year = years) |>
   mutate(available = map2_lgl(variable, year, check_variable))
+
+write_csv(audit_results, "audit_results.csv")
 ```
 
-::: {style="font-size: 0.8em; color: #E5751F; margin-top: 16px;"}
-⚠️ This makes ~84 API calls — takes a few minutes. Save immediately:
-
-`write_csv(audit_results, "audit_results.csv")`
+::: {.note}
+This makes ~84 API calls and takes a few minutes. Save immediately with `write_csv()` so you never have to run it again.
 :::
 
 ---
 
-## What the Audit Reveals {background-color="#ffffff"}
+## What the Audit Reveals
 
-| Variable | Coverage | Missing |
-|----------|----------|---------|
+| Variable | Coverage | Missing Years |
+|----------|----------|---------------|
 | Total Population | ✅ 14/14 | — |
 | Median Household Income | ✅ 14/14 | — |
 | Population Below Poverty | ✅ 14/14 | — |
@@ -251,17 +259,13 @@ audit_results <- expand_grid(variable = vars, year = years) |>
 | Health Insurance Universe | ⚠️ 12/14 | 2010–2011 |
 | **Broadband Access** | **⚠️ 7/14** | **2010–2016** |
 
-::: {style="font-size: 0.8em; color: #861F41; margin-top: 12px;"}
-If your project needs broadband data, your analysis window starts in 2017 — not 2010.
+::: {.note}
+If your project needs broadband data, your analysis window starts in 2017 — not 2010. This is the kind of thing the audit is designed to surface.
 :::
 
 ---
 
-## Adding Labels and Categories {background-color="#ffffff"}
-
-::: {style="font-size: 0.82em;"}
-Variable codes aren't human-readable. Add your own labels and categories:
-:::
+## Adding Labels and Categories
 
 ```r
 var_metadata <- tibble(
@@ -287,107 +291,181 @@ audit_final <- audit_results |>
 
 ---
 
-## Building the Dashboard {background-color="#ffffff"}
+## Building the Dashboard
 
-::: {style="font-size: 0.85em;"}
-**Option 1 — Pure R** using `reactable`:
+::: {.contrib-grid}
+::: {.contrib-column}
+::: {.contrib-heading}
+Option 1 — Pure R
 :::
-
 ```r
 library(reactable)
 library(htmlwidgets)
 
-widget <- reactable(audit_final, filterable = TRUE, searchable = TRUE)
-saveWidget(widget, "data_availability.html")
-```
+widget <- reactable(
+  audit_final,
+  filterable  = TRUE,
+  searchable  = TRUE
+)
 
-::: {style="font-size: 0.85em; margin-top: 16px;"}
-**Option 2 — R + Claude** for a more polished result:
+saveWidget(widget,
+  "data_availability.html")
+```
+Functional, shareable, no AI needed.
 :::
 
+::: {.contrib-column}
+::: {.contrib-heading}
+Option 2 — R + Claude
+:::
 ```r
 library(jsonlite)
+
 cat(toJSON(audit_final |>
-  mutate(years_present = map(years_present, as.integer),
-         missing_years = map(missing_years, as.integer)),
-  pretty = TRUE))
+  mutate(
+    years_present =
+      map(years_present, as.integer),
+    missing_years =
+      map(missing_years, as.integer)
+  ), pretty = TRUE))
 ```
-
-::: {style="font-size: 0.8em; color: #861F41;"}
-Copy the JSON → paste into Claude with a prompt → download HTML
+Copy JSON → paste into Claude → download polished HTML dashboard.
+:::
 :::
 
 ---
 
-## Now You Try {background-color="#E5751F"}
+## Now You Try {background-color="#861F41"}
 
-::: {style="color: white; font-size: 0.95em;"}
-**Your turn — 20 minutes**
+::: {.workflow}
+::: {.workflow-step}
+::: {.step-number}
+1
+:::
+::: {.card-title}
+Open
+:::
+Open `workshop_exercise.R` from the shared folder
+:::
+::: {.workflow-step}
+::: {.step-number}
+2
+:::
+::: {.card-title}
+Load
+:::
+`acs_virginia_raw.csv` is pre-loaded — no API calls needed
+:::
+::: {.workflow-step}
+::: {.step-number}
+3
+:::
+::: {.card-title}
+Fill
+:::
+Fill in the **3 gaps** marked `# YOUR CODE HERE`
+:::
+::: {.workflow-step}
+::: {.step-number}
+4
+:::
+::: {.card-title}
+Build
+:::
+Run the audit and generate your dashboard
+:::
+::: {.workflow-step}
+::: {.step-number}
+5
+:::
+::: {.card-title}
+Extend
+:::
+If you finish early — try Option 2 with Claude
+:::
+:::
 
-<br>
-
-1. Open `workshop_exercise.R` from the shared folder
-2. `acs_virginia_raw.csv` is pre-loaded — no API calls needed
-3. Fill in the **3 gaps** marked `# YOUR CODE HERE`
-4. Run the audit and build your dashboard
-5. If you finish early — try Option 2 with Claude
-
-<br>
-
-*Solution is in `workshop_solution.R` if you get stuck.*
+::: {.note}
+Solution is in `workshop_solution.R` if you get stuck.
 :::
 
 ---
 
-## Apply This to Your Project {background-color="#ffffff"}
+## Apply This to Your Own Project
 
-::: {style="font-size: 0.9em;"}
-1. **Read your project proposal** — what variables do you need?
-2. **Find the ACS codes** using `load_variables()`
-3. **Run the audit** — which years are actually available?
-4. **Add your own labels and categories**
-5. **Generate the dashboard** — share with your team and stakeholders
-6. **Save the script** — this is part of your project documentation
+::: {.question-grid}
+::: {.question-card}
+::: {.question-title}
+Step 1 — Read your proposal
+:::
+What variables do you need? Write them down before touching any code.
+:::
+::: {.question-card}
+::: {.question-title}
+Step 2 — Find the codes
+:::
+Use `load_variables()` to find the ACS table and cell for each variable you need.
+:::
+::: {.question-card}
+::: {.question-title}
+Step 3 — Run the audit
+:::
+Which years are actually available? Don't assume — check programmatically.
+:::
+::: {.question-card}
+::: {.question-title}
+Step 4 — Document
+:::
+Add your own labels and categories. Save the audit script — it is part of your project documentation.
+:::
 :::
 
-::: {style="font-size: 0.8em; color: #E5751F; margin-top: 16px;"}
-Rural Health & AVI teams: your broadband analysis window starts in 2017, not 2010.
+::: {.note}
+Rural Health & AVI teams: broadband analysis window starts in 2017, not 2010.
 :::
 
 ---
 
-## Summary {background-color="#861F41"}
+## Summary
 
-::: {style="color: white; font-size: 0.9em;"}
-**What you learned today:**
-
+::: {.scope-core}
+::: {.mini-heading}
+What you learned today
+:::
 - How to pull ACS data by variable code using `tidycensus`
 - How to audit variable availability across years with `tryCatch()`
-- Why some variables have gaps — and why that matters
-- How to document your data with labels and categories
+- Why some variables have gaps — and why that matters for your analysis
+- How to document findings with human-readable labels and categories
 - How to turn your audit into a shareable HTML dashboard
+:::
 
-<br>
-
-**The pipeline:**
-
+::: {.scope-conditional}
+::: {.mini-heading}
+The pipeline
+:::
 `get_acs()` → `check_variable()` → `expand_grid()` → `reactable` / Claude → HTML
 :::
 
 ---
 
-## Questions? {background-color="#ffffff"}
+## Questions? {.title-custom}
 
-::: {style="text-align: center; margin-top: 40px;"}
-**Pragati Dahal**
-
-Graduate Research Assistant · Agricultural & Applied Economics
-
-Virginia Tech
-
-[pdahal23@vt.edu](mailto:pdahal23@vt.edu)
-
-<br>
-
-*Workshop materials available in the shared DSPG folder*
+::: {.title-block}
+::: {.t-title}
+Thank you
+:::
+::: {.t-rule}
+:::
+::: {.t-authors}
+**Pragati Dahal** <br>
+Graduate Research Assistant · Agricultural & Applied Economics <br>
+Virginia Tech <br>
+pdahal23@vt.edu
+:::
+::: {.t-program}
+Workshop materials available in the shared DSPG folder
+:::
+::: {.t-logos}
+![](images/kohlcentre_logo.png){height="70"}
+:::
 :::
