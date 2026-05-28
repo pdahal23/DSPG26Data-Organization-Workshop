@@ -1,0 +1,393 @@
+---
+title: "Organizing and Documenting Data Availability"
+subtitle: "Using R to Audit Your Data"
+author: "Pragati Dahal"
+institute: "Virginia Tech · Data Science for the Public Good"
+date: "June 5, 2026"
+format:
+  revealjs:
+    theme: simple
+    logo: images/kohlcentre_logo.png
+    footer: "DSPG Summer 2026 · Virginia Tech"
+    slide-number: true
+    transition: fade
+    background-transition: fade
+    highlight-style: github
+    code-line-numbers: false
+    fontsize: 1.1em
+    execute:
+      eval: false
+      echo: true
+    css: workshop_styles.css
+---
+
+## What Are We Building Today? {background-color="#861F41"}
+
+::: {style="color: white; font-size: 0.95em;"}
+By the end of this workshop, you will be able to:
+
+<br>
+
+**Identify** which variables exist in your dataset across years
+
+**Audit** data availability programmatically in R
+
+**Document** your findings in a structured format
+
+**Visualize** the results as an interactive dashboard
+:::
+
+::: {.notes}
+Open the finished HTML dashboard in browser before starting. Show it here.
+:::
+
+---
+
+## Where This Fits {background-color="#ffffff"}
+
+::: {style="font-size: 0.9em;"}
+**Before you clean your data, you need to know what you actually have.**
+
+If a variable only exists for 3 out of 14 years — you need to know that *before* you spend hours cleaning it.
+:::
+
+<br>
+
+::: {style="font-size: 1em; text-align: center;"}
+Raw Data → **[YOU ARE HERE]** → Cleaning → Analysis → Report
+:::
+
+<br>
+
+::: {style="font-size: 0.85em; color: #861F41;"}
+Today's focus: the step between downloading data and cleaning it.
+:::
+
+---
+
+## tidycensus: Your Data Access Tool {background-color="#ffffff"}
+
+::: {style="font-size: 0.85em;"}
+You set up your Census API key in the previous workshop. Now we use it.
+
+`tidycensus` gives you ACS data directly in R — no manual downloading.
+:::
+
+```r
+library(tidycensus)
+library(tidyverse)
+
+get_acs(
+  geography = "county",      # unit of analysis
+  variables = "B19013_001",  # which variable
+  state     = "VA",          # which state
+  year      = 2022,          # which year
+  survey    = "acs5"         # 5-year estimates
+)
+```
+
+---
+
+## Finding Variable Codes {background-color="#ffffff"}
+
+::: {style="font-size: 0.85em;"}
+ACS variables follow a pattern: **Table + Cell number**
+
+`B19013_001` = Table B19013 (Median Household Income), Cell 001
+:::
+
+<br>
+
+```r
+# Search the full variable list
+vars <- load_variables(2022, "acs5", cache = TRUE)
+View(vars)
+
+# Search by keyword
+vars |>
+  filter(str_detect(label, "income|Income")) |>
+  select(name, label, concept)
+```
+
+::: {style="font-size: 0.8em; color: #E5751F;"}
+💡 Always check the `concept` column — it tells you which table the variable belongs to.
+:::
+
+---
+
+## Your First Data Pull {background-color="#ffffff"}
+
+```r
+va_income <- get_acs(
+  geography = "county",
+  variables = "B19013_001",
+  state     = "VA",
+  year      = 2022,
+  survey    = "acs5"
+)
+
+head(va_income)
+```
+
+::: {style="font-size: 0.78em; background: #f3eeea; padding: 12px; border-radius: 6px; font-family: monospace;"}
+\# A tibble: 6 × 5<br>
+&nbsp;&nbsp;GEOID &nbsp;NAME &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; variable &nbsp;&nbsp;&nbsp;estimate &nbsp;&nbsp;&nbsp;moe<br>
+1 51001 &nbsp;Accomack County, Virginia &nbsp;&nbsp; B19013_001 &nbsp;&nbsp;52694 &nbsp;&nbsp;5883<br>
+2 51003 &nbsp;Albemarle County, Virginia &nbsp; B19013_001 &nbsp;&nbsp;97708 &nbsp;&nbsp;3686
+:::
+
+---
+
+## Pulling Multiple Years {background-color="#ffffff"}
+
+::: {style="font-size: 0.85em;"}
+Use `map_dfr()` to loop over years and stack the results into one dataframe:
+:::
+
+```r
+years <- 2015:2022
+
+multi_year <- map_dfr(years, function(yr) {
+  get_acs(
+    geography = "county",
+    variables = c(
+      median_income = "B19013_001",
+      poverty       = "B17001_002"
+    ),
+    state  = "VA",
+    year   = yr,
+    survey = "acs5"
+  ) |>
+    mutate(year = yr)
+})
+```
+
+::: {style="font-size: 0.8em; color: #861F41;"}
+`map_dfr()` = run this for each year, then stack all results into one dataframe.
+:::
+
+---
+
+## The Problem: Not All Variables Exist {background-color="#ffffff"}
+
+::: {style="font-size: 0.85em;"}
+Try pulling broadband access for 2012:
+:::
+
+```r
+get_acs(
+  geography = "county",
+  variables = "B28002_004",  # broadband access
+  state     = "VA",
+  year      = 2012,
+  survey    = "acs5"
+)
+```
+
+::: {style="font-size: 0.85em; margin-top: 20px;"}
+**You get an error.** ACS didn't track broadband at the county level before 2017.
+
+This is not a data error — it's measurement history. And you need to know this *before* you build your analysis.
+:::
+
+---
+
+## The Audit Function {background-color="#ffffff"}
+
+::: {style="font-size: 0.85em;"}
+Use `tryCatch()` to handle errors gracefully — returns `TRUE` if data exists, `FALSE` if not:
+:::
+
+```r
+check_variable <- function(var, year) {
+  tryCatch({
+    result <- get_acs(
+      geography = "county",
+      variables = var,
+      state     = "VA",
+      year      = year,
+      survey    = "acs5"
+    )
+    nrow(result) > 0
+  }, error = function(e) FALSE)
+}
+
+check_variable("B28002_004", 2012)  # FALSE
+check_variable("B28002_004", 2020)  # TRUE
+```
+
+---
+
+## Running the Full Audit {background-color="#ffffff"}
+
+```r
+vars <- c(
+  "B19013_001",  "B17001_002",  "B15003_022",
+  "B27001_001",  "B01003_001",  "B28002_004"
+)
+
+years <- 2010:2023
+
+audit_results <- expand_grid(variable = vars, year = years) |>
+  mutate(available = map2_lgl(variable, year, check_variable))
+```
+
+::: {style="font-size: 0.8em; color: #E5751F; margin-top: 16px;"}
+⚠️ This makes ~84 API calls — takes a few minutes. Save immediately:
+
+`write_csv(audit_results, "audit_results.csv")`
+:::
+
+---
+
+## What the Audit Reveals {background-color="#ffffff"}
+
+| Variable | Coverage | Missing |
+|----------|----------|---------|
+| Total Population | ✅ 14/14 | — |
+| Median Household Income | ✅ 14/14 | — |
+| Population Below Poverty | ✅ 14/14 | — |
+| Bachelor's Degree | ⚠️ 12/14 | 2010–2011 |
+| Health Insurance Universe | ⚠️ 12/14 | 2010–2011 |
+| **Broadband Access** | **⚠️ 7/14** | **2010–2016** |
+
+::: {style="font-size: 0.8em; color: #861F41; margin-top: 12px;"}
+If your project needs broadband data, your analysis window starts in 2017 — not 2010.
+:::
+
+---
+
+## Adding Labels and Categories {background-color="#ffffff"}
+
+::: {style="font-size: 0.82em;"}
+Variable codes aren't human-readable. Add your own labels and categories:
+:::
+
+```r
+var_metadata <- tibble(
+  variable = c("B19013_001","B17001_002","B15003_022",
+               "B27001_001","B01003_001","B28002_004"),
+  label    = c("Median Household Income","Population Below Poverty",
+               "Bachelor's Degree","Health Insurance Universe",
+               "Total Population","Broadband Access"),
+  category = c("Socioeconomic","Socioeconomic","Socioeconomic",
+               "Healthcare Access","Demographics","Infrastructure")
+)
+
+audit_final <- audit_results |>
+  left_join(var_metadata, by = "variable") |>
+  group_by(variable, label, category) |>
+  summarise(
+    n_years       = sum(available),
+    years_present = list(year[available == TRUE]),
+    missing_years = list(year[available == FALSE]),
+    .groups = "drop"
+  )
+```
+
+---
+
+## Building the Dashboard {background-color="#ffffff"}
+
+::: {style="font-size: 0.85em;"}
+**Option 1 — Pure R** using `reactable`:
+:::
+
+```r
+library(reactable)
+library(htmlwidgets)
+
+widget <- reactable(audit_final, filterable = TRUE, searchable = TRUE)
+saveWidget(widget, "data_availability.html")
+```
+
+::: {style="font-size: 0.85em; margin-top: 16px;"}
+**Option 2 — R + Claude** for a more polished result:
+:::
+
+```r
+library(jsonlite)
+cat(toJSON(audit_final |>
+  mutate(years_present = map(years_present, as.integer),
+         missing_years = map(missing_years, as.integer)),
+  pretty = TRUE))
+```
+
+::: {style="font-size: 0.8em; color: #861F41;"}
+Copy the JSON → paste into Claude with a prompt → download HTML
+:::
+
+---
+
+## Now You Try {background-color="#E5751F"}
+
+::: {style="color: white; font-size: 0.95em;"}
+**Your turn — 20 minutes**
+
+<br>
+
+1. Open `workshop_exercise.R` from the shared folder
+2. `acs_virginia_raw.csv` is pre-loaded — no API calls needed
+3. Fill in the **3 gaps** marked `# YOUR CODE HERE`
+4. Run the audit and build your dashboard
+5. If you finish early — try Option 2 with Claude
+
+<br>
+
+*Solution is in `workshop_solution.R` if you get stuck.*
+:::
+
+---
+
+## Apply This to Your Project {background-color="#ffffff"}
+
+::: {style="font-size: 0.9em;"}
+1. **Read your project proposal** — what variables do you need?
+2. **Find the ACS codes** using `load_variables()`
+3. **Run the audit** — which years are actually available?
+4. **Add your own labels and categories**
+5. **Generate the dashboard** — share with your team and stakeholders
+6. **Save the script** — this is part of your project documentation
+:::
+
+::: {style="font-size: 0.8em; color: #E5751F; margin-top: 16px;"}
+Rural Health & AVI teams: your broadband analysis window starts in 2017, not 2010.
+:::
+
+---
+
+## Summary {background-color="#861F41"}
+
+::: {style="color: white; font-size: 0.9em;"}
+**What you learned today:**
+
+- How to pull ACS data by variable code using `tidycensus`
+- How to audit variable availability across years with `tryCatch()`
+- Why some variables have gaps — and why that matters
+- How to document your data with labels and categories
+- How to turn your audit into a shareable HTML dashboard
+
+<br>
+
+**The pipeline:**
+
+`get_acs()` → `check_variable()` → `expand_grid()` → `reactable` / Claude → HTML
+:::
+
+---
+
+## Questions? {background-color="#ffffff"}
+
+::: {style="text-align: center; margin-top: 40px;"}
+**Pragati Dahal**
+
+Graduate Research Assistant · Agricultural & Applied Economics
+
+Virginia Tech
+
+[pdahal23@vt.edu](mailto:pdahal23@vt.edu)
+
+<br>
+
+*Workshop materials available in the shared DSPG folder*
+:::
