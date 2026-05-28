@@ -1,7 +1,7 @@
 ---
 format:
   revealjs:
-    theme: [default, workshop_styles.scss]
+    theme: [default, workshop_data_availability.scss]
     slide-number: true
     transition: slide
     background-transition: fade
