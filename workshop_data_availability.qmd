@@ -329,8 +329,35 @@ cat(toJSON(audit_final |>
       map(missing_years, as.integer)
   ), pretty = TRUE))
 ```
-Copy JSON → paste into Claude → download polished HTML dashboard.
+Copy JSON → paste into Claude with the prompt on the next slide.
 :::
+:::
+
+---
+
+## The Claude Prompt
+
+::: {.scope-core}
+::: {.mini-heading}
+Copy this — then paste your JSON at the bottom
+:::
+You are a data visualization expert. I have audited variable availability in ACS 5-year estimates for Virginia counties from 2010–2023. Below is a JSON file with the results.
+
+Please create a single self-contained interactive HTML dashboard that shows:
+
+- A grid where rows = variables and columns = years
+- Color-coded cells by category (filled = available, grey = missing)
+- Hover tooltips showing variable name, category, years present, and missing years
+- Filter buttons by coverage (full/partial) and by category
+- A summary stats bar at the top
+
+Use Virginia Tech colors: maroon (#861F41), orange (#E5751F), white background. Make it clean, professional, and suitable for a research presentation.
+
+**Here is the JSON data: [PASTE YOUR JSON HERE]**
+:::
+
+::: {.note}
+The more specific your prompt, the better the output. Mention colors, layout, interactivity — Claude needs that context.
 :::
 
 ---
@@ -345,7 +372,6 @@ Copy JSON → paste into Claude → download polished HTML dashboard.
 ::: {.card-title}
 Open
 :::
-Open `workshop_exercise.R` from the shared folder
 :::
 ::: {.workflow-step}
 ::: {.step-number}
@@ -354,7 +380,6 @@ Open `workshop_exercise.R` from the shared folder
 ::: {.card-title}
 Load
 :::
-`acs_virginia_raw.csv` is pre-loaded — no API calls needed
 :::
 ::: {.workflow-step}
 ::: {.step-number}
@@ -363,7 +388,6 @@ Load
 ::: {.card-title}
 Fill
 :::
-Fill in the **3 gaps** marked `# YOUR CODE HERE`
 :::
 ::: {.workflow-step}
 ::: {.step-number}
@@ -372,7 +396,6 @@ Fill in the **3 gaps** marked `# YOUR CODE HERE`
 ::: {.card-title}
 Build
 :::
-Run the audit and generate your dashboard
 :::
 ::: {.workflow-step}
 ::: {.step-number}
@@ -381,14 +404,12 @@ Run the audit and generate your dashboard
 ::: {.card-title}
 Extend
 :::
-If you finish early — try Option 2 with Claude
 :::
 :::
 
 ::: {.note}
 Solution is in `workshop_solution.R` if you get stuck.
 :::
-
 ---
 
 ## Apply This to Your Own Project
@@ -418,10 +439,6 @@ Step 4 — Document
 :::
 Add your own labels and categories. Save the audit script — it is part of your project documentation.
 :::
-:::
-
-::: {.note}
-Rural Health & AVI teams: broadband analysis window starts in 2017, not 2010.
 :::
 
 ---

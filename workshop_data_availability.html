@@ -1345,8 +1345,30 @@ margin-right: 0; }
 <span id="cb10-7"><a href></a>    <span class="at">missing_years =</span></span>
 <span id="cb10-8"><a href></a>      <span class="fu">map</span>(missing_years, as.integer)</span>
 <span id="cb10-9"><a href></a>  ), <span class="at">pretty =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Copy JSON → paste into Claude → download polished HTML dashboard.</p>
+<p>Copy JSON → paste into Claude with the prompt on the next slide.</p>
 </div>
+</div>
+</section>
+<section id="the-claude-prompt" class="slide level2">
+<h2>The Claude Prompt</h2>
+<div class="scope-core">
+<div class="mini-heading">
+<p>Copy this — then paste your JSON at the bottom</p>
+</div>
+<p>You are a data visualization expert. I have audited variable availability in ACS 5-year estimates for Virginia counties from 2010–2023. Below is a JSON file with the results.</p>
+<p>Please create a single self-contained interactive HTML dashboard that shows:</p>
+<ul>
+<li>A grid where rows = variables and columns = years</li>
+<li>Color-coded cells by category (filled = available, grey = missing)</li>
+<li>Hover tooltips showing variable name, category, years present, and missing years</li>
+<li>Filter buttons by coverage (full/partial) and by category</li>
+<li>A summary stats bar at the top</li>
+</ul>
+<p>Use Virginia Tech colors: maroon (#861F41), orange (#E5751F), white background. Make it clean, professional, and suitable for a research presentation.</p>
+<p><strong>Here is the JSON data: [PASTE YOUR JSON HERE]</strong></p>
+</div>
+<div class="note">
+<p>The more specific your prompt, the better the output. Mention colors, layout, interactivity — Claude needs that context.</p>
 </div>
 </section>
 <section id="now-you-try" class="slide level2" data-background-color="#861F41">
@@ -1359,7 +1381,6 @@ margin-right: 0; }
 <div class="card-title">
 <p>Open</p>
 </div>
-<p>Open <code>workshop_exercise.R</code> from the shared folder</p>
 </div>
 <div class="workflow-step">
 <div class="step-number">
@@ -1368,7 +1389,6 @@ margin-right: 0; }
 <div class="card-title">
 <p>Load</p>
 </div>
-<p><code>acs_virginia_raw.csv</code> is pre-loaded — no API calls needed</p>
 </div>
 <div class="workflow-step">
 <div class="step-number">
@@ -1377,7 +1397,6 @@ margin-right: 0; }
 <div class="card-title">
 <p>Fill</p>
 </div>
-<p>Fill in the <strong>3 gaps</strong> marked <code># YOUR CODE HERE</code></p>
 </div>
 <div class="workflow-step">
 <div class="step-number">
@@ -1386,7 +1405,6 @@ margin-right: 0; }
 <div class="card-title">
 <p>Build</p>
 </div>
-<p>Run the audit and generate your dashboard</p>
 </div>
 <div class="workflow-step">
 <div class="step-number">
@@ -1395,7 +1413,6 @@ margin-right: 0; }
 <div class="card-title">
 <p>Extend</p>
 </div>
-<p>If you finish early — try Option 2 with Claude</p>
 </div>
 </div>
 <div class="note">
@@ -1429,9 +1446,6 @@ margin-right: 0; }
 </div>
 <p>Add your own labels and categories. Save the audit script — it is part of your project documentation.</p>
 </div>
-</div>
-<div class="note">
-<p>Rural Health &amp; AVI teams: broadband analysis window starts in 2017, not 2010.</p>
 </div>
 </section>
 <section id="summary" class="slide level2">
