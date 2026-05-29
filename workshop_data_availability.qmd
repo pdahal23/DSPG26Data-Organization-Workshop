@@ -341,10 +341,15 @@ Copy JSON → paste into Claude with the prompt on the next slide.
 ::: {.mini-heading}
 Copy this — then paste your JSON at the bottom
 :::
-You are a data visualization expert. I have audited variable availability in ACS 5-year estimates for Virginia counties from 2010–2023. Below is a JSON file with the results.
+
+<div class="prompt-wrapper">
+<button class="prompt-copy-btn"
+  onclick="navigator.clipboard.writeText(document.getElementById('prompt-text').innerText); this.innerHTML='✓'; setTimeout(()=>this.innerHTML='📋',1500);">
+  📋
+</button>
+<pre id="prompt-text">You are a data visualization expert. I have audited variable availability in ACS 5-year estimates for Virginia counties from 2010–2023. Below is a JSON file with the results.
 
 Please create a single self-contained interactive HTML dashboard that shows:
-
 - A grid where rows = variables and columns = years
 - Color-coded cells by category (filled = available, grey = missing)
 - Hover tooltips showing variable name, category, years present, and missing years
@@ -353,62 +358,12 @@ Please create a single self-contained interactive HTML dashboard that shows:
 
 Use Virginia Tech colors: maroon (#861F41), orange (#E5751F), white background. Make it clean, professional, and suitable for a research presentation.
 
-**Here is the JSON data: [PASTE YOUR JSON HERE]**
+Here is the JSON data: [PASTE YOUR JSON HERE]</pre>
+</div>
 :::
 
 ::: {.note}
 The more specific your prompt, the better the output. Mention colors, layout, interactivity — Claude needs that context.
-:::
-
----
-
-## Now You Try {background-color="#861F41"}
-
-::: {.workflow}
-::: {.workflow-step}
-::: {.step-number}
-1
-:::
-::: {.card-title}
-Open
-:::
-:::
-::: {.workflow-step}
-::: {.step-number}
-2
-:::
-::: {.card-title}
-Load
-:::
-:::
-::: {.workflow-step}
-::: {.step-number}
-3
-:::
-::: {.card-title}
-Fill
-:::
-:::
-::: {.workflow-step}
-::: {.step-number}
-4
-:::
-::: {.card-title}
-Build
-:::
-:::
-::: {.workflow-step}
-::: {.step-number}
-5
-:::
-::: {.card-title}
-Extend
-:::
-:::
-:::
-
-::: {.note}
-Solution is in `workshop_solution.R` if you get stuck.
 :::
 ---
 

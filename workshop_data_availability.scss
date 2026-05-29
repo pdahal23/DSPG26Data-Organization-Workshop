@@ -743,3 +743,46 @@ $presentation-font-size-root: 26px;
 
   text-decoration: underline;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   COPYABLE PROMPT BLOCK
+───────────────────────────────────────────────────────────── */
+
+.prompt-wrapper {
+  position: relative;
+
+  margin-top: 0.5em;
+}
+
+.prompt-wrapper pre {
+  font-size: 0.52em;
+  text-align: left;
+  background: #f5f0eb;
+  padding: 1em;
+  border-left: 4px solid #861F41;
+  overflow-y: auto;
+  max-height: 380px;
+  white-space: pre-wrap;
+  border-radius: 4px;
+  margin: 0;
+}
+
+.prompt-copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #861F41;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.7em;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.prompt-wrapper:hover .prompt-copy-btn {
+  opacity: 1;
+}
