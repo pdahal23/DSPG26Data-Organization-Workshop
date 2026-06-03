@@ -1,6 +1,7 @@
 ---
 format:
   revealjs:
+    code-line-numbers: false
     theme: [default, workshop_data_availability.scss]
     slide-number: true
     transition: slide
@@ -72,13 +73,30 @@ The step between downloading data and cleaning it is usually skipped. Today we m
 
 ---
 
-## tidycensus: Your Data Access Tool
+## {background-color="#861F41" data-menu-title="Demo Only"}
+
+::: {style="color: white; text-align: center; padding-top: 160px;"}
+::: {style="font-size: 0.7em; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.7; margin-bottom: 16px;"}
+Instructor Demo
+:::
+::: {style="font-size: 2em; font-weight: 800; font-family: Georgia, serif;"}
+How the Data Was Downloaded
+:::
+::: {style="font-size: 0.9em; opacity: 0.75; margin-top: 16px;"}
+You don't need to run this today — but you should understand what it did.
+:::
+:::
+
+---
+
+## How ACS Data Is Pulled with tidycensus
 
 ::: {.scope-core}
 ::: {.mini-heading}
-You set up your Census API key in the previous workshop. Now we use it.
+This is how acs_virginia_raw.csv was created
 :::
-`tidycensus` gives you ACS data directly in R — no manual downloading required.
+`tidycensus` sends a request to the Census API and returns a clean dataframe.
+One function call, one year, one variable:
 :::
 
 ```r
@@ -87,12 +105,92 @@ library(tidyverse)
 
 get_acs(
   geography = "county",      # unit of analysis
-  variables = "B19013_001",  # which variable
-  state     = "VA",          # which state
+  variables = "B19013_001",  # ACS variable code
+  state     = "VA",          # Virginia counties only
   year      = 2022,          # which year
   survey    = "acs5"         # 5-year estimates
 )
 ```
+
+::: {.note}
+Output: GEOID, NAME, variable, estimate, moe — exactly what is in acs_virginia_raw.csv
+:::
+
+---
+
+## Downloading Multiple Variables Across Years
+
+::: {.scope-core}
+::: {.mini-heading}
+Pull each variable separately — loop over years
+:::
+This is what produced `acs_virginia_raw.csv`. 
+:::
+
+```r
+vars  <- c("B19013_001","B17001_002","B15003_022",
+           "B27001_001","B01003_001","B28002_004")
+years <- 2010:2023
+
+raw_data <- map_dfr(vars, function(var) {
+  map_dfr(years, function(yr) {
+    tryCatch({
+      get_acs(geography="county", variables=var,
+              state="VA", year=yr, survey="acs5") |>
+        mutate(year = yr)
+    }, error = function(e) NULL)   # skip if variable doesn't exist
+  })
+})
+
+write_csv(raw_data, "acs_virginia_raw.csv")
+```
+
+::: {.note}
+This takes several minutes and makes ~84 API calls. We ran it once and saved the result.
+That is the file you are working from today.
+:::
+
+---
+
+## {background-color="#E5751F" data-menu-title="Hands On"}
+
+::: {style="color: white; text-align: center; padding-top: 160px;"}
+::: {style="font-size: 0.7em; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.8; margin-bottom: 16px;"}
+Hands On
+:::
+::: {style="font-size: 2em; font-weight: 800; font-family: Georgia, serif;"}
+Now We Work From the CSV
+:::
+::: {style="font-size: 0.9em; opacity: 0.85; margin-top: 16px;"}
+No API needed — the data is already downloaded for you.
+:::
+:::
+
+---
+
+## What's in acs_virginia_raw.csv
+
+::: {.scope-core}
+::: {.mini-heading}
+Load and explore the data
+:::
+:::
+
+```r
+library(tidyverse)
+
+raw <- read_csv("acs_virginia_raw.csv")
+glimpse(raw)
+```
+
+::: {.scope-conditional}
+::: {.mini-heading}
+What you will see
+:::
+- **9,725 rows** — one per county × variable × year combination
+- **6 columns:** `GEOID`, `NAME`, `variable`, `estimate`, `moe`, `year`
+- Not all variables appear in all years — that is what we are about to audit
+:::
 
 ---
 
@@ -104,12 +202,11 @@ ACS variables follow a pattern: Table + Cell number
 :::
 `B19013_001` = Table B19013 (Median Household Income), Cell 001
 
-Use `load_variables()` to search the full list:
+When you do your own project pull, use `load_variables()` to search:
 :::
 
 ```r
 vars <- load_variables(2022, "acs5", cache = TRUE)
-View(vars)
 
 # Search by keyword
 vars |>
@@ -123,128 +220,31 @@ Always check the `concept` column — it tells you which table the variable belo
 
 ---
 
-## Your First Data Pull
-
-```r
-va_income <- get_acs(
-  geography = "county",
-  variables = "B19013_001",
-  state     = "VA",
-  year      = 2022,
-  survey    = "acs5"
-)
-
-head(va_income)
-```
+## Auditing Availability from the CSV
 
 ::: {.scope-core}
 ::: {.mini-heading}
-Output
+Which variables exist in which years?
 :::
-Each row is one county. Five columns: `GEOID`, `NAME`, `variable`, `estimate`, `moe`
-
-- **estimate** = the ACS value
-- **moe** = margin of error
-:::
-
----
-
-## Pulling Multiple Years
-
-::: {.note}
-`map_dfr()` means: run this function for each year, then stack all results into one dataframe.
+Instead of making API calls, we check the CSV directly.
+`distinct()` gives us every variable-year combination that actually exists.
+We compare against the full 2010–2023 range to find the gaps.
 :::
 
 ```r
-years <- 2015:2022
+years_in_data <- raw |>
+  distinct(variable, year)              # what actually exists in the CSV
 
-multi_year <- map_dfr(years, function(yr) {
-  get_acs(
-    geography = "county",
-    variables = c(
-      median_income = "B19013_001",
-      poverty       = "B17001_002"
-    ),
-    state  = "VA",
-    year   = yr,
-    survey = "acs5"
-  ) |>
-    mutate(year = yr)
-})
-```
-
----
-
-## The Problem: Not All Variables Exist
-
-```r
-get_acs(
-  geography = "county",
-  variables = "B28002_004",  # broadband access
-  state     = "VA",
-  year      = 2012,
-  survey    = "acs5"
-)
-```
-
-::: {.scope-core}
-::: {.mini-heading}
-You get an error
-:::
-ACS did not track broadband subscriptions at the county level before 2017.
-
-This is not a data error — it is measurement history. And you need to know this *before* you build your analysis panel.
-:::
-
----
-
-## The Audit Function
-
-::: {.note}
-`tryCatch()` lets R handle errors gracefully — instead of crashing, it returns `FALSE`.
-:::
-
-```r
-check_variable <- function(var, year) {
-  tryCatch({
-    result <- get_acs(
-      geography = "county",
-      variables = var,
-      state     = "VA",
-      year      = year,
-      survey    = "acs5"
-    )
-    nrow(result) > 0     # TRUE if data exists
-  }, error = function(e) {
-    FALSE                # FALSE if error
-  })
-}
-
-check_variable("B28002_004", 2012)   # FALSE
-check_variable("B28002_004", 2020)   # TRUE
-```
-
----
-
-## Running the Full Audit
-
-```r
-vars <- c(
-  "B19013_001",  "B17001_002",  "B15003_022",
-  "B27001_001",  "B01003_001",  "B28002_004"
+all_combos <- expand_grid(
+  variable = unique(raw$variable),      # all 6 variables
+  year     = 2010:2023                  # all 14 years
 )
 
-years <- 2010:2023
-
-audit_results <- expand_grid(variable = vars, year = years) |>
-  mutate(available = map2_lgl(variable, year, check_variable))
-
-write_csv(audit_results, "audit_results.csv")
+audit_results <- all_combos |>
+  left_join(years_in_data |> mutate(available = TRUE),
+            by = c("variable", "year")) |>
+  mutate(available = replace_na(available, FALSE))
 ```
-
-::: {.note}
-This makes ~84 API calls and takes a few minutes. Save immediately with `write_csv()` so you never have to run it again.
-:::
 
 ---
 
@@ -259,9 +259,6 @@ This makes ~84 API calls and takes a few minutes. Save immediately with `write_c
 | Health Insurance Universe | ⚠️ 12/14 | 2010–2011 |
 | **Broadband Access** | **⚠️ 7/14** | **2010–2016** |
 
-::: {.note}
-If your project needs broadband data, your analysis window starts in 2017 — not 2010. This is the kind of thing the audit is designed to surface.
-:::
 
 ---
 
@@ -296,28 +293,27 @@ audit_final <- audit_results |>
 ::: {.contrib-grid}
 ::: {.contrib-column}
 ::: {.contrib-heading}
-Option 1 — Pure R
+Track A — Pure R + QMD
 :::
+Once you have `audit_final`, render the Quarto dashboard:
+
 ```r
-library(reactable)
-library(htmlwidgets)
-
-widget <- reactable(
-  audit_final,
-  filterable  = TRUE,
-  searchable  = TRUE
+quarto::quarto_render(
+  "data_availability_dashboard.qmd"
 )
-
-saveWidget(widget,
-  "data_availability.html")
 ```
-Functional, shareable, no AI needed.
+
+This produces a styled interactive HTML table using `reactable` — no AI needed.
+
+Open `data_availability_dashboard.html` in your browser.
 :::
 
 ::: {.contrib-column}
 ::: {.contrib-heading}
-Option 2 — R + Claude
+Track B — R + Claude
 :::
+Export `audit_final` as JSON:
+
 ```r
 library(jsonlite)
 
@@ -329,7 +325,8 @@ cat(toJSON(audit_final |>
       map(missing_years, as.integer)
   ), pretty = TRUE))
 ```
-Copy JSON → paste into Claude with the prompt on the next slide.
+
+Copy the output → paste into Claude with the prompt on the next slide.
 :::
 :::
 
@@ -337,17 +334,14 @@ Copy JSON → paste into Claude with the prompt on the next slide.
 
 ## The Claude Prompt
 
-::: {.scope-core}
-::: {.mini-heading}
-Copy this — then paste your JSON at the bottom
+::: {.note}
+Select all the text in the box, copy, paste into Claude, then add your JSON at the bottom.
 :::
 
-<div class="prompt-wrapper">
-<button class="prompt-copy-btn"
-  onclick="navigator.clipboard.writeText(document.getElementById('prompt-text').innerText); this.innerHTML='✓'; setTimeout(()=>this.innerHTML='📋',1500);">
-  📋
-</button>
-<pre id="prompt-text">You are a data visualization expert. I have audited variable availability in ACS 5-year estimates for Virginia counties from 2010–2023. Below is a JSON file with the results.
+```markdown
+You are a data visualization expert. I have audited variable
+availability in ACS 5-year estimates for Virginia counties
+from 2010–2023. Below is a JSON file with the results.
 
 Please create a single self-contained interactive HTML dashboard that shows:
 - A grid where rows = variables and columns = years
@@ -356,15 +350,16 @@ Please create a single self-contained interactive HTML dashboard that shows:
 - Filter buttons by coverage (full/partial) and by category
 - A summary stats bar at the top
 
-Use Virginia Tech colors: maroon (#861F41), orange (#E5751F), white background. Make it clean, professional, and suitable for a research presentation.
+Use Virginia Tech colors: maroon (#861F41), orange (#E5751F),
+white background. Make it clean, professional, and suitable
+for a research presentation.
 
-Here is the JSON data: [PASTE YOUR JSON HERE]</pre>
-</div>
-:::
-
+Here is the JSON data: [PASTE YOUR JSON HERE]
+```
 ::: {.note}
-The more specific your prompt, the better the output. Mention colors, layout, interactivity — Claude needs that context.
+The more specific your prompt, the better the output. Mention colors, layout, interactivity.
 :::
+
 ---
 
 ## Apply This to Your Own Project
@@ -392,8 +387,12 @@ Which years are actually available? Don't assume — check programmatically.
 ::: {.question-title}
 Step 4 — Document
 :::
-Add your own labels and categories. Save the audit script — it is part of your project documentation.
+Add your own labels and categories. Save the audit script — this is part of your project documentation.
 :::
+:::
+
+::: {.note}
+Rural Health & AVI teams: broadband analysis window starts in 2017, not 2010.
 :::
 
 ---
@@ -404,18 +403,17 @@ Add your own labels and categories. Save the audit script — it is part of your
 ::: {.mini-heading}
 What you learned today
 :::
-- How to pull ACS data by variable code using `tidycensus`
-- How to audit variable availability across years with `tryCatch()`
-- Why some variables have gaps — and why that matters for your analysis
+- How ACS data is pulled using `tidycensus` and why variables have different year coverage
+- How to audit data availability from a CSV using `distinct()` and `left_join()`
 - How to document findings with human-readable labels and categories
-- How to turn your audit into a shareable HTML dashboard
+- How to turn your audit into a shareable HTML dashboard — two ways
 :::
 
 ::: {.scope-conditional}
 ::: {.mini-heading}
 The pipeline
 :::
-`get_acs()` → `check_variable()` → `expand_grid()` → `reactable` / Claude → HTML
+`acs_virginia_raw.csv` → `audit_results` → `audit_final` → QMD dashboard / Claude → HTML
 :::
 
 ---
@@ -432,6 +430,7 @@ Thank you
 **Pragati Dahal** <br>
 Graduate Research Assistant · Agricultural & Applied Economics <br>
 Virginia Tech <br>
+pdahal23@vt.edu
 :::
 ::: {.t-program}
 Workshop materials available in the shared DSPG folder

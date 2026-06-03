@@ -1,0 +1,250 @@
+---
+title: "ACS Variable Availability"
+subtitle: "Virginia Counties · 2010–2023"
+format:
+  html:
+    theme: cosmo
+    css: dashboard_styles.css
+    toc: false
+    embed-resources: true
+    page-layout: full
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+
+# ── Load packages ─────────────────────────────────────────
+# tidyverse: data wrangling (read_csv, mutate, group_by, etc.)
+# reactable: interactive HTML tables
+# htmltools: build HTML elements like div() in R
+
+library(tidyverse)
+library(reactable)
+library(htmltools)
+
+
+# ── Step 1: Load the pre-downloaded ACS data ──────────────
+# This CSV was downloaded using tidycensus and contains
+# county-level ACS 5-year estimates for Virginia counties
+# from 2010 to 2023 for 6 variables.
+# Columns: GEOID, NAME, variable, estimate, moe, year
+
+raw <- read_csv("acs_virginia_raw.csv")
+
+
+# ── Step 2: Define variable metadata ──────────────────────
+# ACS variable codes are not human-readable (e.g. B19013_001).
+# We create a lookup table that maps each code to:
+#   - a plain English label
+#   - a thematic category
+# This metadata will be joined to the audit results later.
+
+var_metadata <- tibble(
+  variable = c("B19013_001", "B17001_002", "B15003_022",
+               "B27001_001", "B01003_001", "B28002_004"),
+  label    = c("Median Household Income", "Population Below Poverty",
+               "Bachelor's Degree", "Health Insurance Universe",
+               "Total Population", "Broadband Access"),
+  category = c("Socioeconomic", "Socioeconomic", "Socioeconomic",
+               "Healthcare Access", "Demographics", "Infrastructure")
+)
+
+
+# ── Step 3: Audit availability from the CSV ───────────────
+# Instead of making API calls, we check the CSV directly.
+# For each variable, we find which years have data present
+# and which years are missing (no rows in the CSV).
+#
+# distinct() gets us one row per unique variable-year combo
+# that actually exists in the data.
+# Then we compare against the full 2010-2023 range to find gaps.
+
+years_in_data <- raw |>
+  distinct(variable, year)                  # what actually exists
+
+all_combos <- expand_grid(
+  variable = unique(raw$variable),          # all 6 variables
+  year     = 2010:2023                      # all 14 years
+)
+
+audit_results <- all_combos |>
+  left_join(years_in_data |> mutate(available = TRUE),
+            by = c("variable", "year")) |>
+  mutate(available = replace_na(available, FALSE))
+# available = TRUE  → data exists for this variable-year
+# available = FALSE → data is missing (variable wasn't tracked yet)
+
+
+# ── Step 4: Summarise into one row per variable ───────────
+# We join the human-readable metadata, then collapse all
+# 14 year rows per variable into a single summary row showing:
+#   n_years       → how many years have data
+#   years_present → list of years with data
+#   missing_years → list of years without data
+
+audit_final <- audit_results |>
+  left_join(var_metadata, by = "variable") |>
+  group_by(variable, label, category) |>
+  summarise(
+    n_years       = sum(available),
+    years_present = list(year[available == TRUE]),
+    missing_years = list(year[available == FALSE]),
+    .groups = "drop"
+  )
+```
+
+```{r}
+#| label: table
+
+# ── Step 5: Define category colors ────────────────────────
+# Each category gets a distinct color used throughout the table.
+# These are applied to the Category column text.
+# VT maroon and orange for the first two, teal and green for the rest.
+
+cat_colors <- c(
+  "Demographics"      = "#861F41",  # VT maroon
+  "Socioeconomic"     = "#E5751F",  # VT orange
+  "Healthcare Access" = "#2E7D8C",  # teal
+  "Infrastructure"    = "#5B7A3A"   # green
+)
+
+
+# ── Step 6: Prepare display-ready table data ──────────────
+# audit_final has list columns (years_present, missing_years)
+# which don't display well in a table. We convert them to
+# human-readable strings here.
+#
+# coverage     → "7/14" or "14/14"
+# missing_text → "—" if none missing, "2010, 2011" if few,
+#                "2010–2016" as a range if many
+# status       → "Full" or "Partial" for the badge column
+#
+# n_years is kept hidden — used only for internal logic
+
+table_data <- audit_final |>
+  mutate(
+    # How many years out of 14 have data
+    coverage = paste0(n_years, "/14"),
+
+    # Convert missing_years list to readable string
+    missing_text = map_chr(missing_years, function(x) {
+      if (length(x) == 0)       "\u2014"                          # — (no missing)
+      else if (length(x) <= 3)  paste(x, collapse = ", ")         # e.g. 2010, 2011
+      else                      paste0(min(x), "\u2013", max(x))  # e.g. 2010–2016
+    }),
+
+    # Simple full/partial flag for the status badge
+    status = if_else(n_years == 14, "Full", "Partial")
+  ) |>
+  select(label, category, coverage, missing_text, status, n_years)
+
+
+# ── Step 7: Render the interactive reactable table ────────
+# reactable() creates an interactive HTML table with:
+#   searchable  → search box above the table
+#   filterable  → dropdown filters on each column
+#   highlight   → row highlights on hover
+#
+# reactableTheme() controls the overall table appearance:
+#   headerStyle → column header background and text
+#   borderColor → line between rows
+#   cellPadding → spacing inside each cell
+#
+# Each colDef() controls one column:
+#   name  → display name shown in header
+#   width → column width in pixels
+#   style → fixed or data-driven cell styling
+#   cell  → custom HTML rendering (used for status badge)
+#   show  → FALSE hides the column from display
+
+reactable(
+  table_data,
+  searchable      = TRUE,
+  filterable      = TRUE,
+  highlight       = TRUE,
+  defaultPageSize = 10,
+
+  # Overall table font
+  style = list(fontFamily = "Calibri, Arial, sans-serif",
+               fontSize   = "15px"),
+
+  # Table-level theme — colors, borders, padding
+  theme = reactableTheme(
+    headerStyle    = list(
+      background = "#861F41",   # VT maroon header
+      color      = "white",
+      fontWeight = "bold",
+      fontSize   = "13px"
+    ),
+    borderColor    = "#e0d6cf", # soft border between rows
+    stripedColor   = "#faf5f6", # alternating row shading
+    highlightColor = "#f3eeea", # hover row color
+    cellPadding    = "10px 16px"
+  ),
+
+  columns = list(
+
+    # Variable name — plain dark text, slightly bold
+    label = colDef(
+      name  = "Variable",
+      width = 240,
+      style = list(fontWeight = "500", color = "#1a0a0f")
+    ),
+
+    # Category — colored by category using cat_colors lookup
+    category = colDef(
+      name  = "Category",
+      width = 180,
+      style = function(value) {
+        list(color = cat_colors[value], fontWeight = "bold")
+      }
+    ),
+
+    # Coverage — green if full (14/14), orange if partial
+    coverage = colDef(
+      name  = "Coverage",
+      width = 100,
+      align = "center",
+      style = function(value) {
+        if (value == "14/14") list(color = "#2E7D8C", fontWeight = "bold")
+        else                  list(color = "#E5751F", fontWeight = "bold")
+      }
+    ),
+
+    # Missing years — grey dash if none, maroon text if missing
+    missing_text = colDef(
+      name  = "Missing Years",
+      width = 160,
+      align = "center",
+      style = function(value) {
+        if (value == "\u2014") list(color = "#8a7070")  # grey dash
+        else                   list(color = "#861F41", fontWeight = "500")
+      }
+    ),
+
+    # Status badge — pill-shaped colored label
+    # Full = teal badge, Partial = orange badge
+    status = colDef(
+      name  = "Status",
+      width = 110,
+      align = "center",
+      cell  = function(value) {
+        color <- if (value == "Full") "#2E7D8C" else "#E5751F"
+        bg    <- if (value == "Full") "#e8f4f6" else "#fdf0e8"
+        div(style = paste0(
+          "display:inline-block; padding:3px 10px; border-radius:100px;",
+          "font-size:11px; font-weight:600;",
+          "color:", color, "; background:", bg, ";"
+        ), value)
+      }
+    ),
+
+    # n_years — hidden, used only for coverage/status logic above
+    n_years = colDef(show = FALSE)
+  )
+)
+a```
