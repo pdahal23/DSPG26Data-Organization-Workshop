@@ -83,7 +83,7 @@ Instructor Demo
 How the Data Was Downloaded
 :::
 ::: {style="font-size: 0.9em; opacity: 0.75; margin-top: 16px;"}
-You don't need to run this today — but you should understand what it did.
+You can try to use API for today's workshop, there is a downloaded file that we can use — but try to understand what the API did.
 :::
 :::
 
