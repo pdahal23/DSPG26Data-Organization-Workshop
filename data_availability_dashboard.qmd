@@ -4,7 +4,6 @@ subtitle: "Virginia Counties · 2010–2023"
 format:
   html:
     theme: cosmo
-    css: dashboard_styles.css
     toc: false
     embed-resources: true
     page-layout: full
@@ -20,12 +19,10 @@ execute:
 # ── Load packages ─────────────────────────────────────────
 # tidyverse: data wrangling (read_csv, mutate, group_by, etc.)
 # reactable: interactive HTML tables
-# htmltools: build HTML elements like div() in R
 
 library(tidyverse)
 library(reactable)
 library(htmltools)
-
 
 # ── Step 1: Load the pre-downloaded ACS data ──────────────
 # This CSV was downloaded using tidycensus and contains
@@ -34,7 +31,6 @@ library(htmltools)
 # Columns: GEOID, NAME, variable, estimate, moe, year
 
 raw <- read_csv("acs_virginia_raw.csv")
-
 
 # ── Step 2: Define variable metadata ──────────────────────
 # ACS variable codes are not human-readable (e.g. B19013_001).
@@ -53,22 +49,18 @@ var_metadata <- tibble(
                "Healthcare Access", "Demographics", "Infrastructure")
 )
 
-
 # ── Step 3: Audit availability from the CSV ───────────────
 # Instead of making API calls, we check the CSV directly.
-# For each variable, we find which years have data present
-# and which years are missing (no rows in the CSV).
-#
 # distinct() gets us one row per unique variable-year combo
 # that actually exists in the data.
 # Then we compare against the full 2010-2023 range to find gaps.
 
 years_in_data <- raw |>
-  distinct(variable, year)                  # what actually exists
+  distinct(variable, year)              # what actually exists
 
 all_combos <- expand_grid(
-  variable = unique(raw$variable),          # all 6 variables
-  year     = 2010:2023                      # all 14 years
+  variable = unique(raw$variable),      # all 6 variables
+  year     = 2010:2023                  # all 14 years
 )
 
 audit_results <- all_combos |>
@@ -77,7 +69,6 @@ audit_results <- all_combos |>
   mutate(available = replace_na(available, FALSE))
 # available = TRUE  → data exists for this variable-year
 # available = FALSE → data is missing (variable wasn't tracked yet)
-
 
 # ── Step 4: Summarise into one row per variable ───────────
 # We join the human-readable metadata, then collapse all
@@ -102,7 +93,6 @@ audit_final <- audit_results |>
 
 # ── Step 5: Define category colors ────────────────────────
 # Each category gets a distinct color used throughout the table.
-# These are applied to the Category column text.
 # VT maroon and orange for the first two, teal and green for the rest.
 
 cat_colors <- c(
@@ -111,7 +101,6 @@ cat_colors <- c(
   "Healthcare Access" = "#2E7D8C",  # teal
   "Infrastructure"    = "#5B7A3A"   # green
 )
-
 
 # ── Step 6: Prepare display-ready table data ──────────────
 # audit_final has list columns (years_present, missing_years)
@@ -122,26 +111,19 @@ cat_colors <- c(
 # missing_text → "—" if none missing, "2010, 2011" if few,
 #                "2010–2016" as a range if many
 # status       → "Full" or "Partial" for the badge column
-#
 # n_years is kept hidden — used only for internal logic
 
 table_data <- audit_final |>
   mutate(
-    # How many years out of 14 have data
     coverage = paste0(n_years, "/14"),
-
-    # Convert missing_years list to readable string
     missing_text = map_chr(missing_years, function(x) {
-      if (length(x) == 0)       "\u2014"                          # — (no missing)
-      else if (length(x) <= 3)  paste(x, collapse = ", ")         # e.g. 2010, 2011
-      else                      paste0(min(x), "\u2013", max(x))  # e.g. 2010–2016
+      if (length(x) == 0)       "\u2014"
+      else if (length(x) <= 3)  paste(x, collapse = ", ")
+      else                      paste0(min(x), "\u2013", max(x))
     }),
-
-    # Simple full/partial flag for the status badge
     status = if_else(n_years == 14, "Full", "Partial")
   ) |>
   select(label, category, coverage, missing_text, status, n_years)
-
 
 # ── Step 7: Render the interactive reactable table ────────
 # reactable() creates an interactive HTML table with:
@@ -149,7 +131,7 @@ table_data <- audit_final |>
 #   filterable  → dropdown filters on each column
 #   highlight   → row highlights on hover
 #
-# reactableTheme() controls the overall table appearance:
+# reactableTheme() controls overall appearance:
 #   headerStyle → column header background and text
 #   borderColor → line between rows
 #   cellPadding → spacing inside each cell
@@ -168,21 +150,19 @@ reactable(
   highlight       = TRUE,
   defaultPageSize = 10,
 
-  # Overall table font
   style = list(fontFamily = "Calibri, Arial, sans-serif",
                fontSize   = "15px"),
 
-  # Table-level theme — colors, borders, padding
   theme = reactableTheme(
     headerStyle    = list(
-      background = "#861F41",   # VT maroon header
+      background = "#861F41",
       color      = "white",
       fontWeight = "bold",
       fontSize   = "13px"
     ),
-    borderColor    = "#e0d6cf", # soft border between rows
-    stripedColor   = "#faf5f6", # alternating row shading
-    highlightColor = "#f3eeea", # hover row color
+    borderColor    = "#e0d6cf",
+    stripedColor   = "#faf5f6",
+    highlightColor = "#f3eeea",
     cellPadding    = "10px 16px"
   ),
 
@@ -204,7 +184,7 @@ reactable(
       }
     ),
 
-    # Coverage — green if full (14/14), orange if partial
+    # Coverage — teal if full (14/14), orange if partial
     coverage = colDef(
       name  = "Coverage",
       width = 100,
@@ -221,7 +201,7 @@ reactable(
       width = 160,
       align = "center",
       style = function(value) {
-        if (value == "\u2014") list(color = "#8a7070")  # grey dash
+        if (value == "\u2014") list(color = "#8a7070")
         else                   list(color = "#861F41", fontWeight = "500")
       }
     ),
@@ -247,4 +227,4 @@ reactable(
     n_years = colDef(show = FALSE)
   )
 )
-a```
+```
