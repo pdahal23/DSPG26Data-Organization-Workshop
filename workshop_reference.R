@@ -15,7 +15,7 @@
 #   4. Loading and exploring the pre-downloaded data
 #   5. Auditing variable availability across years
 #   6. Adding human-readable labels and categories
-#   7. Building the dashboard — two options
+#   7. Building the dashboard — four options
 # ============================================================
 
 
@@ -23,21 +23,33 @@
 #
 # tidycensus: connects R to the Census Bureau API so you can
 #   download ACS data directly without visiting data.census.gov
-
+#
 # tidyverse: a collection of R packages for data wrangling
 #   and visualization. Includes dplyr, tidyr, readr, purrr,
 #   ggplot2, and more.
 #
 # jsonlite: converts R objects to JSON format, which is
 #   used to pass data to Claude for dashboard generation.
+#
+# reactable: creates interactive HTML tables
+#
+# htmlwidgets: saves R widgets as standalone HTML files
+#
+# shiny: builds interactive web apps with R
 
 install.packages("tidycensus")
 install.packages("tidyverse")
 install.packages("jsonlite")
+install.packages("reactable")
+install.packages("htmlwidgets")
+install.packages("shiny")
 
 library(tidycensus)
 library(tidyverse)
 library(jsonlite)
+library(reactable)
+library(htmlwidgets)
+library(shiny)
 
 
 # ── Section 2: Understanding ACS Variable Codes ───────────
@@ -76,7 +88,7 @@ vars_lookup |>
   head(10) |>
   View()
 # name    = the variable code to use in get_acs()
-# label   = what the variable measures (!! separates hierarchy levels)
+# label   = what the variable measures (!!! separates hierarchy levels)
 # concept = the name of the table this variable belongs to
 
 # Search for broadband variables
@@ -202,7 +214,7 @@ glimpse(raw)
 # 9,725 rows — one per county × variable × year combination
 # 6 columns: GEOID, NAME, variable, estimate, moe, year
 
-# How many counties per year?
+# How many rows per variable per year?
 raw |> count(year, variable)
 
 # Which variables are in the data?
@@ -225,7 +237,7 @@ raw |>
 #   2. Create a grid of ALL possible combinations (6 vars × 14 years)
 #   3. Join them together — missing combinations become FALSE
 #
-# This is much faster than making API calls, because the data
+# This is much faster than making API calls because the data
 # is already downloaded. We just check what's in the file.
 
 # Step 5a: What actually exists in the CSV
@@ -250,7 +262,7 @@ audit_results <- all_combos |>
   mutate(available = replace_na(available, FALSE))
 # left_join keeps all 84 rows from all_combos.
 # Rows that matched years_in_data get available = TRUE.
-# Rows with no match get available = NA, then we replace with FALSE.
+# Rows with no match get available = NA, replaced with FALSE.
 
 # Check the results
 audit_results |>
@@ -270,10 +282,10 @@ audit_results |>
 #   category → thematic grouping for color-coding in the dashboard
 #
 # Categories used here match the DSPG Infrastructure project:
-#   Demographics     → who the population is
-#   Socioeconomic    → income, poverty, education
+#   Demographics      → who the population is
+#   Socioeconomic     → income, poverty, education
 #   Healthcare Access → insurance, health services
-#   Infrastructure   → broadband, transportation
+#   Infrastructure    → broadband, transportation
 
 var_metadata <- tibble(
   variable = c("B19013_001", "B17001_002", "B15003_022",
@@ -290,9 +302,9 @@ audit_final <- audit_results |>
   left_join(var_metadata, by = "variable") |>
   group_by(variable, label, category) |>
   summarise(
-    n_years       = sum(available),           # count of years with data
-    years_present = list(year[available == TRUE]),   # list of available years
-    missing_years = list(year[available == FALSE]),  # list of missing years
+    n_years       = sum(available),
+    years_present = list(year[available == TRUE]),
+    missing_years = list(year[available == FALSE]),
     .groups = "drop"
   )
 
@@ -301,29 +313,65 @@ audit_final |>
   select(label, category, n_years) |>
   print()
 
+# Save for use in the dashboard QMD and Shiny app
+saveRDS(audit_final, "audit_final.rds")
+
 
 # ── Section 7: Build the Dashboard ────────────────────────
+# Four options — from simplest to most polished.
+# All four require audit_final to exist in your environment.
+# Options 2, 3, and 4 also require audit_final.rds on disk.
 
-# ── Option A: Pure R + Quarto Dashboard ───────────────────
+
+# ── Option 1: reactable widget ────────────────────────────
 #
-# Render data_availability_dashboard.qmd to produce a
-# styled interactive HTML table using the reactable package.
-# No AI needed — everything is built in R.
+# The quickest way to get a shareable HTML file.
+# Produces a basic interactive table with search and filter.
+# Works offline as a completely standalone HTML file.
+
+widget <- reactable(
+  audit_final,
+  filterable = TRUE,
+  searchable = TRUE
+)
+
+saveWidget(widget, "data_availability.html", selfcontained = TRUE)
+# Open data_availability.html in any browser.
+
+
+# ── Option 2: Quarto Dashboard ────────────────────────────
 #
-# Make sure data_availability_dashboard.qmd is in your
-# working directory before running this.
+# Renders data_availability_dashboard.qmd which loads
+# audit_final.rds and produces a styled, color-coded table.
+# More polished than Option 1 — uses VT colors and custom styling.
+# Still works offline as a standalone HTML file.
+#
+# Requires: audit_final.rds in your working directory.
 
 quarto::quarto_render("data_availability_dashboard.qmd")
-
-# This creates data_availability_dashboard.html in your folder.
-# Open it in any browser — it works offline, no server needed.
+# Opens data_availability_dashboard.html in your browser.
 
 
-# ── Option B: R + Claude ──────────────────────────────────
+# ── Option 3: Shiny App ───────────────────────────────────
 #
-# Export audit_final as JSON, then paste it into Claude
-# along with the prompt below to generate a polished
-# color-coded interactive HTML dashboard.
+# Runs app.R as a live interactive Shiny application.
+# Filters update instantly without re-rendering.
+# Good for exploring the data interactively in RStudio.
+#
+# Note: Shiny requires a running R session. Unlike Options
+# 1 and 2, it cannot be saved as a standalone HTML file
+# and shared directly.
+#
+# Requires: audit_final.rds in your working directory.
+
+shiny::runApp("app.R")
+
+
+# ── Option 4: R + Claude ──────────────────────────────────
+#
+# Export audit_final as JSON, paste into Claude with the
+# prompt below to generate a polished color-coded
+# interactive HTML dashboard with hover tooltips and filters.
 #
 # Step 1: Export the JSON
 
@@ -338,7 +386,7 @@ cat(toJSON(
 
 # Step 2: Copy the JSON output from the console
 # Step 3: Open claude.ai in your browser
-# Step 4: Paste the following prompt, then paste the JSON at the bottom:
+# Step 4: Paste the prompt below, then paste the JSON at the bottom
 
 # ── Claude Prompt ─────────────────────────────────────────
 # You are a data visualization expert. I have audited variable
@@ -361,8 +409,9 @@ cat(toJSON(
 # Here is the JSON data: [PASTE YOUR JSON HERE]
 # ─────────────────────────────────────────────────────────
 
-# Step 5: Claude will generate an HTML file
+# Step 5: Claude generates an HTML file
 # Step 6: Download it and open in your browser
+
 
 # ── For Your Own Project ──────────────────────────────────
 #
@@ -373,9 +422,9 @@ cat(toJSON(
 # 3. Run the download loop (Section 3) with your variables
 # 4. Run the audit (Section 5) to check year coverage
 # 5. Add your own labels and categories (Section 6)
-# 6. Generate the dashboard (Section 7)
+# 6. Generate the dashboard using whichever option fits your needs
 # 7. Save the script — this becomes part of your project documentation
 #
-# Remember: always check broadband (B28002_004) coverage
-# before building a panel that includes it. Your analysis
-# window starts in 2017, not 2010.
+# Remember: always check coverage of all variables you need
+# before building a panel that includes it. 
+# Your analysis window starts in 2017, not 2010.

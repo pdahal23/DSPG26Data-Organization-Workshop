@@ -1158,7 +1158,7 @@ margin-right: 0; }
 <span id="cb2-8"><a href aria-hidden="true" tabindex="-1"></a>      <span class="fu">get_acs</span>(<span class="at">geography=</span><span class="st">&quot;county&quot;</span>, <span class="at">variables=</span>var,</span>
 <span id="cb2-9"><a href aria-hidden="true" tabindex="-1"></a>              <span class="at">state=</span><span class="st">&quot;VA&quot;</span>, <span class="at">year=</span>yr, <span class="at">survey=</span><span class="st">&quot;acs5&quot;</span>) <span class="sc">|&gt;</span></span>
 <span id="cb2-10"><a href aria-hidden="true" tabindex="-1"></a>        <span class="fu">mutate</span>(<span class="at">year =</span> yr)</span>
-<span id="cb2-11"><a href aria-hidden="true" tabindex="-1"></a>    }, <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NULL</span>)   <span class="co"># skip if variable doesn&#39;t exist</span></span>
+<span id="cb2-11"><a href aria-hidden="true" tabindex="-1"></a>    }, <span class="at">error =</span> <span class="cf">function</span>(e) <span class="cn">NULL</span>)</span>
 <span id="cb2-12"><a href aria-hidden="true" tabindex="-1"></a>  })</span>
 <span id="cb2-13"><a href aria-hidden="true" tabindex="-1"></a>})</span>
 <span id="cb2-14"><a href aria-hidden="true" tabindex="-1"></a></span>
@@ -1233,11 +1233,11 @@ margin-right: 0; }
 <p>Instead of making API calls, we check the CSV directly. <code>distinct()</code> gives us every variable-year combination that actually exists. We compare against the full 2010–2023 range to find the gaps.</p>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href aria-hidden="true" tabindex="-1"></a>years_in_data <span class="ot">&lt;-</span> raw <span class="sc">|&gt;</span></span>
-<span id="cb5-2"><a href aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(variable, year)              <span class="co"># what actually exists in the CSV</span></span>
+<span id="cb5-2"><a href aria-hidden="true" tabindex="-1"></a>  <span class="fu">distinct</span>(variable, year)</span>
 <span id="cb5-3"><a href aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-4"><a href aria-hidden="true" tabindex="-1"></a>all_combos <span class="ot">&lt;-</span> <span class="fu">expand_grid</span>(</span>
-<span id="cb5-5"><a href aria-hidden="true" tabindex="-1"></a>  <span class="at">variable =</span> <span class="fu">unique</span>(raw<span class="sc">$</span>variable),      <span class="co"># all 6 variables</span></span>
-<span id="cb5-6"><a href aria-hidden="true" tabindex="-1"></a>  <span class="at">year     =</span> <span class="dv">2010</span><span class="sc">:</span><span class="dv">2023</span>                  <span class="co"># all 14 years</span></span>
+<span id="cb5-5"><a href aria-hidden="true" tabindex="-1"></a>  <span class="at">variable =</span> <span class="fu">unique</span>(raw<span class="sc">$</span>variable),</span>
+<span id="cb5-6"><a href aria-hidden="true" tabindex="-1"></a>  <span class="at">year     =</span> <span class="dv">2010</span><span class="sc">:</span><span class="dv">2023</span></span>
 <span id="cb5-7"><a href aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb5-8"><a href aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-9"><a href aria-hidden="true" tabindex="-1"></a>audit_results <span class="ot">&lt;-</span> all_combos <span class="sc">|&gt;</span></span>
@@ -1314,12 +1314,12 @@ margin-right: 0; }
 <span id="cb6-18"><a href aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span></span>
 <span id="cb6-19"><a href aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb6-20"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-21"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># Save so the dashboard QMD can load it</span></span>
+<span id="cb6-21"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># Save so the dashboard QMD and Shiny app can load it</span></span>
 <span id="cb6-22"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(audit_final, <span class="st">&quot;audit_final.rds&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="building-the-dashboard" class="slide level2">
 <h2>Building the Dashboard</h2>
-<div class="contrib-grid-3">
+<div class="contrib-grid">
 <div class="contrib-column">
 <div class="contrib-heading">
 <p>Option 1 — reactable widget</p>
@@ -1335,7 +1335,7 @@ margin-right: 0; }
 <span id="cb7-9"><a href aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-10"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">saveWidget</span>(widget,</span>
 <span id="cb7-11"><a href aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;data_availability.html&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Quick, functional, shareable. No AI needed.</p>
+<p>Quick, functional, shareable. No AI needed. Works offline as a standalone HTML file.</p>
 </div>
 <div class="contrib-column">
 <div class="contrib-heading">
@@ -1345,22 +1345,38 @@ margin-right: 0; }
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href aria-hidden="true" tabindex="-1"></a>quarto<span class="sc">::</span><span class="fu">quarto_render</span>(</span>
 <span id="cb8-2"><a href aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;data_availability_dashboard.qmd&quot;</span></span>
 <span id="cb8-3"><a href aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Open <code>data_availability_dashboard.html</code> in your browser.</p>
+<p>Styled interactive table using <code>reactable</code> inside a Quarto HTML document. Open <code>data_availability_dashboard.html</code> in your browser.</p>
+</div>
+</div>
+</section>
+<section id="building-the-dashboard-1" class="slide level2">
+<h2>Building the Dashboard</h2>
+<div class="contrib-grid">
+<div class="contrib-column">
+<div class="contrib-heading">
+<p>Option 3 — Shiny App</p>
+</div>
+<p>Make sure <code>audit_final.rds</code> exists, then:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href aria-hidden="true" tabindex="-1"></a>shiny<span class="sc">::</span><span class="fu">runApp</span>(<span class="st">&quot;app.R&quot;</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Live reactive filtering — filters update instantly without re-rendering. Runs in RStudio. Good Shiny practice.</p>
+<div class="note">
+<p>Shiny requires R to be running. Unlike Options 1 and 2, it cannot be shared as a standalone file.</p>
+</div>
 </div>
 <div class="contrib-column">
 <div class="contrib-heading">
-<p>Option 3 — R + Claude</p>
+<p>Option 4 — R + Claude</p>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(jsonlite)</span>
-<span id="cb9-2"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-3"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">toJSON</span>(audit_final <span class="sc">|&gt;</span></span>
-<span id="cb9-4"><a href aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb9-5"><a href aria-hidden="true" tabindex="-1"></a>    <span class="at">years_present =</span></span>
-<span id="cb9-6"><a href aria-hidden="true" tabindex="-1"></a>      <span class="fu">map</span>(years_present, as.integer),</span>
-<span id="cb9-7"><a href aria-hidden="true" tabindex="-1"></a>    <span class="at">missing_years =</span></span>
-<span id="cb9-8"><a href aria-hidden="true" tabindex="-1"></a>      <span class="fu">map</span>(missing_years, as.integer)</span>
-<span id="cb9-9"><a href aria-hidden="true" tabindex="-1"></a>  ), <span class="at">pretty =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Copy JSON → paste into Claude with the prompt on the next slide.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(jsonlite)</span>
+<span id="cb10-2"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">toJSON</span>(audit_final <span class="sc">|&gt;</span></span>
+<span id="cb10-4"><a href aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb10-5"><a href aria-hidden="true" tabindex="-1"></a>    <span class="at">years_present =</span></span>
+<span id="cb10-6"><a href aria-hidden="true" tabindex="-1"></a>      <span class="fu">map</span>(years_present, as.integer),</span>
+<span id="cb10-7"><a href aria-hidden="true" tabindex="-1"></a>    <span class="at">missing_years =</span></span>
+<span id="cb10-8"><a href aria-hidden="true" tabindex="-1"></a>      <span class="fu">map</span>(missing_years, as.integer)</span>
+<span id="cb10-9"><a href aria-hidden="true" tabindex="-1"></a>  ), <span class="at">pretty =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Copy JSON → paste into Claude with the prompt on the next slide → polished color-coded HTML dashboard.</p>
 </div>
 </div>
 </section>
@@ -1369,22 +1385,22 @@ margin-right: 0; }
 <div class="note">
 <p>Select all the text in the box, copy, paste into Claude, then add your JSON at the bottom.</p>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb10-1"><a href aria-hidden="true" tabindex="-1"></a>You are a data visualization expert. I have audited variable</span>
-<span id="cb10-2"><a href aria-hidden="true" tabindex="-1"></a>availability in ACS 5-year estimates for Virginia counties</span>
-<span id="cb10-3"><a href aria-hidden="true" tabindex="-1"></a>from 2010–2023. Below is a JSON file with the results.</span>
-<span id="cb10-4"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-5"><a href aria-hidden="true" tabindex="-1"></a>Please create a single self-contained interactive HTML dashboard that shows:</span>
-<span id="cb10-6"><a href aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A grid where rows = variables and columns = years</span>
-<span id="cb10-7"><a href aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Color-coded cells by category (filled = available, grey = missing)</span>
-<span id="cb10-8"><a href aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Hover tooltips showing variable name, category, years present, and missing years</span>
-<span id="cb10-9"><a href aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Filter buttons by coverage (full/partial) and by category</span>
-<span id="cb10-10"><a href aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A summary stats bar at the top</span>
-<span id="cb10-11"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-12"><a href aria-hidden="true" tabindex="-1"></a>Use Virginia Tech colors: maroon (#861F41), orange (#E5751F),</span>
-<span id="cb10-13"><a href aria-hidden="true" tabindex="-1"></a>white background. Make it clean, professional, and suitable</span>
-<span id="cb10-14"><a href aria-hidden="true" tabindex="-1"></a>for a research presentation.</span>
-<span id="cb10-15"><a href aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-16"><a href aria-hidden="true" tabindex="-1"></a>Here is the JSON data: <span class="co">[</span><span class="ot">PASTE YOUR JSON HERE</span><span class="co">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb11-1"><a href aria-hidden="true" tabindex="-1"></a>You are a data visualization expert. I have audited variable</span>
+<span id="cb11-2"><a href aria-hidden="true" tabindex="-1"></a>availability in ACS 5-year estimates for Virginia counties</span>
+<span id="cb11-3"><a href aria-hidden="true" tabindex="-1"></a>from 2010–2023. Below is a JSON file with the results.</span>
+<span id="cb11-4"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href aria-hidden="true" tabindex="-1"></a>Please create a single self-contained interactive HTML dashboard that shows:</span>
+<span id="cb11-6"><a href aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A grid where rows = variables and columns = years</span>
+<span id="cb11-7"><a href aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Color-coded cells by category (filled = available, grey = missing)</span>
+<span id="cb11-8"><a href aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Hover tooltips showing variable name, category, years present, and missing years</span>
+<span id="cb11-9"><a href aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Filter buttons by coverage (full/partial) and by category</span>
+<span id="cb11-10"><a href aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A summary stats bar at the top</span>
+<span id="cb11-11"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href aria-hidden="true" tabindex="-1"></a>Use Virginia Tech colors: maroon (#861F41), orange (#E5751F),</span>
+<span id="cb11-13"><a href aria-hidden="true" tabindex="-1"></a>white background. Make it clean, professional, and suitable</span>
+<span id="cb11-14"><a href aria-hidden="true" tabindex="-1"></a>for a research presentation.</span>
+<span id="cb11-15"><a href aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-16"><a href aria-hidden="true" tabindex="-1"></a>Here is the JSON data: <span class="co">[</span><span class="ot">PASTE YOUR JSON HERE</span><span class="co">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="note">
 <p>The more specific your prompt, the better the output. Mention colors, layout, interactivity.</p>
 </div>
@@ -1426,7 +1442,7 @@ margin-right: 0; }
 <div class="card-title">
 <p>Build</p>
 </div>
-<p>Choose Option 1, 2, or 3</p>
+<p>Choose Option 1, 2, 3, or 4</p>
 </div>
 <div class="workflow-step">
 <div class="step-number">
@@ -1484,14 +1500,14 @@ margin-right: 0; }
 <li>How ACS data is pulled using <code>tidycensus</code> and why variables have different year coverage</li>
 <li>How to audit data availability from a CSV using <code>distinct()</code> and <code>left_join()</code></li>
 <li>How to document findings with human-readable labels and categories</li>
-<li>How to turn your audit into a shareable HTML dashboard — three ways</li>
+<li>How to turn your audit into a shareable HTML dashboard — four ways</li>
 </ul>
 </div>
 <div class="scope-conditional">
 <div class="mini-heading">
 <p>The pipeline</p>
 </div>
-<p><code>acs_virginia_raw.csv</code> → <code>audit_results</code> → <code>audit_final</code> → reactable / QMD / Claude → HTML</p>
+<p><code>acs_virginia_raw.csv</code> → <code>audit_results</code> → <code>audit_final</code> → reactable / QMD / Shiny / Claude → HTML</p>
 </div>
 </section>
 <section id="questions" class="slide level2 title-custom">

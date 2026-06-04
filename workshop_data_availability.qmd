@@ -138,7 +138,7 @@ raw_data <- map_dfr(vars, function(var) {
       get_acs(geography="county", variables=var,
               state="VA", year=yr, survey="acs5") |>
         mutate(year = yr)
-    }, error = function(e) NULL)   # skip if variable doesn't exist
+    }, error = function(e) NULL)
   })
 })
 
@@ -235,11 +235,11 @@ We compare against the full 2010–2023 range to find the gaps.
 
 ```r
 years_in_data <- raw |>
-  distinct(variable, year)              # what actually exists in the CSV
+  distinct(variable, year)
 
 all_combos <- expand_grid(
-  variable = unique(raw$variable),      # all 6 variables
-  year     = 2010:2023                  # all 14 years
+  variable = unique(raw$variable),
+  year     = 2010:2023
 )
 
 audit_results <- all_combos |>
@@ -290,7 +290,7 @@ audit_final <- audit_results |>
     .groups = "drop"
   )
 
-# Save so the dashboard QMD can load it
+# Save so the dashboard QMD and Shiny app can load it
 saveRDS(audit_final, "audit_final.rds")
 ```
 
@@ -298,7 +298,7 @@ saveRDS(audit_final, "audit_final.rds")
 
 ## Building the Dashboard
 
-::: {.contrib-grid-3}
+::: {.contrib-grid}
 ::: {.contrib-column}
 ::: {.contrib-heading}
 Option 1 — reactable widget
@@ -316,7 +316,7 @@ widget <- reactable(
 saveWidget(widget,
   "data_availability.html")
 ```
-Quick, functional, shareable. No AI needed.
+Quick, functional, shareable. No AI needed. Works offline as a standalone HTML file.
 :::
 
 ::: {.contrib-column}
@@ -331,12 +331,35 @@ quarto::quarto_render(
 )
 ```
 
-Open `data_availability_dashboard.html` in your browser.
+Styled interactive table using `reactable` inside a Quarto HTML document. Open `data_availability_dashboard.html` in your browser.
+:::
+:::
+
+---
+
+## Building the Dashboard
+
+::: {.contrib-grid}
+::: {.contrib-column}
+::: {.contrib-heading}
+Option 3 — Shiny App
+:::
+Make sure `audit_final.rds` exists, then:
+
+```r
+shiny::runApp("app.R")
+```
+
+Live reactive filtering — filters update instantly without re-rendering. Runs in RStudio. Good Shiny practice.
+
+::: {.note}
+Shiny requires R to be running. Unlike Options 1 and 2, it cannot be shared as a standalone file.
+:::
 :::
 
 ::: {.contrib-column}
 ::: {.contrib-heading}
-Option 3 — R + Claude
+Option 4 — R + Claude
 :::
 ```r
 library(jsonlite)
@@ -349,7 +372,7 @@ cat(toJSON(audit_final |>
       map(missing_years, as.integer)
   ), pretty = TRUE))
 ```
-Copy JSON → paste into Claude with the prompt on the next slide.
+Copy JSON → paste into Claude with the prompt on the next slide → polished color-coded HTML dashboard.
 :::
 :::
 
@@ -423,7 +446,7 @@ Fill 3 gaps marked `YOUR CODE HERE`
 ::: {.card-title}
 Build
 :::
-Choose Option 1, 2, or 3
+Choose Option 1, 2, 3, or 4
 :::
 ::: {.workflow-step}
 ::: {.step-number}
@@ -486,14 +509,14 @@ What you learned today
 - How ACS data is pulled using `tidycensus` and why variables have different year coverage
 - How to audit data availability from a CSV using `distinct()` and `left_join()`
 - How to document findings with human-readable labels and categories
-- How to turn your audit into a shareable HTML dashboard — three ways
+- How to turn your audit into a shareable HTML dashboard — four ways
 :::
 
 ::: {.scope-conditional}
 ::: {.mini-heading}
 The pipeline
 :::
-`acs_virginia_raw.csv` → `audit_results` → `audit_final` → reactable / QMD / Claude → HTML
+`acs_virginia_raw.csv` → `audit_results` → `audit_final` → reactable / QMD / Shiny / Claude → HTML
 :::
 
 ---
