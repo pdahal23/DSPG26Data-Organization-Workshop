@@ -344,7 +344,7 @@ Option 3 — Shiny App
 Make sure `audit_final.rds` exists, then:
 
 ```r
-shiny::runApp("app.R")
+shiny::runApp("data_availability_dashboard_shinyapp.R")
 ```
 
 Live reactive filtering — filters update instantly without re-rendering. Runs in RStudio. Good Shiny practice.
@@ -406,62 +406,6 @@ The more specific your prompt, the better the output. Mention colors, layout, in
 
 ---
 
-## Now You Try {background-color="#861F41"}
-
-::: {.workflow}
-::: {.workflow-step}
-::: {.step-number}
-1
-:::
-::: {.card-title}
-Open
-:::
-Open `workshop_exercise.R`
-:::
-::: {.workflow-step}
-::: {.step-number}
-2
-:::
-::: {.card-title}
-Load
-:::
-Load `acs_virginia_raw.csv`
-:::
-::: {.workflow-step}
-::: {.step-number}
-3
-:::
-::: {.card-title}
-Fill
-:::
-Fill 3 gaps marked `YOUR CODE HERE`
-:::
-::: {.workflow-step}
-::: {.step-number}
-4
-:::
-::: {.card-title}
-Build
-:::
-Choose Option 1, 2, 3, or 4
-:::
-::: {.workflow-step}
-::: {.step-number}
-5
-:::
-::: {.card-title}
-Share
-:::
-Open your dashboard in the browser
-:::
-:::
-
-::: {.note}
-Solution is in `workshop_solution.R` if you get stuck.
-:::
-
----
-
 ## Apply This to Your Own Project
 
 ::: {.question-grid}
@@ -489,10 +433,6 @@ Step 4 — Document
 :::
 Add your own labels and categories. Save the audit script — this is part of your project documentation.
 :::
-:::
-
-::: {.note}
-Rural Health & AVI teams: broadband analysis window starts in 2017, not 2010.
 :::
 
 ---
