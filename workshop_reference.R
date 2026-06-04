@@ -427,4 +427,3 @@ cat(toJSON(
 #
 # Remember: always check coverage of all variables you need
 # before building a panel that includes it. 
-# Your analysis window starts in 2017, not 2010.
