@@ -23,13 +23,17 @@
 #
 # tidycensus: connects R to the Census Bureau API so you can
 #   download ACS data directly without visiting data.census.gov
-#
+
 # tidyverse: a collection of R packages for data wrangling
 #   and visualization. Includes dplyr, tidyr, readr, purrr,
 #   ggplot2, and more.
 #
 # jsonlite: converts R objects to JSON format, which is
 #   used to pass data to Claude for dashboard generation.
+
+install.packages("tidycensus")
+install.packages("tidyverse")
+install.packages("jsonlite")
 
 library(tidycensus)
 library(tidyverse)
