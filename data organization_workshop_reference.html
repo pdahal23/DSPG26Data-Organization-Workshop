@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Availability Workshop — Code Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Lora:wght@400;600;700&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --maroon: #861F41; --orange: #E5751F;
+  --maroon-light: #faf5f6; --maroon-mid: #f3eaec;
+  --border: #e0d0d5; --text: #1a0a0f; --muted: #7a6066;
+  --bg: #fdfaf8; --code-bg: #1e1014; --code-text: #f0e8ea;
+  --code-comment: #a08890; --code-fn: #e5a87f;
+  --code-str: #a8d8a8; --code-kw: #d4a0c0; --code-num: #8ecfcf;
+}
+html { scroll-behavior: smooth; }
+body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); color: var(--text); display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+nav { position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--maroon); padding: 32px 0 40px; display: flex; flex-direction: column; }
+.nav-brand { padding: 0 24px 28px; border-bottom: 1px solid rgba(255,255,255,0.15); margin-bottom: 20px; }
+.nav-brand-title { font-family: 'Lora', serif; font-size: 1em; font-weight: 700; color: white; line-height: 1.3; margin-bottom: 4px; }
+.nav-brand-sub { font-size: 0.72em; color: rgba(255,255,255,0.55); letter-spacing: 0.06em; text-transform: uppercase; }
+.nav-section-label { font-size: 0.65em; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,255,255,0.4); padding: 16px 24px 6px; font-family: 'DM Mono', monospace; }
+nav a { display: flex; align-items: center; gap: 10px; padding: 9px 24px; color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.88em; transition: all 0.15s; border-left: 3px solid transparent; }
+nav a:hover, nav a.active { color: white; background: rgba(255,255,255,0.08); border-left-color: var(--orange); }
+.nav-num { font-family: 'DM Mono', monospace; font-size: 0.75em; color: var(--orange); opacity: 0.8; min-width: 18px; }
+main { padding: 48px 56px 80px; max-width: 900px; }
+.page-header { margin-bottom: 52px; padding-bottom: 28px; border-bottom: 3px solid var(--orange); }
+.page-header h1 { font-family: 'Lora', serif; font-size: 2em; font-weight: 700; color: var(--maroon); line-height: 1.15; margin-bottom: 10px; }
+.page-header p { color: var(--muted); font-size: 1em; line-height: 1.6; max-width: 580px; }
+.section { margin-bottom: 56px; scroll-margin-top: 32px; }
+.section-header { display: flex; align-items: baseline; gap: 14px; margin-bottom: 20px; }
+.section-num { font-family: 'DM Mono', monospace; font-size: 0.78em; color: var(--orange); font-weight: 500; letter-spacing: 0.04em; white-space: nowrap; }
+.section h2 { font-family: 'Lora', serif; font-size: 1.35em; font-weight: 700; color: var(--maroon); }
+.section-desc { font-size: 0.95em; color: var(--muted); line-height: 1.6; margin-bottom: 16px; padding-left: 2px; }
+.code-block { position: relative; margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 1px solid #2a1820; box-shadow: 0 4px 20px rgba(134,31,65,0.12); }
+.code-label { background: #2a1820; padding: 8px 16px; font-family: 'DM Mono', monospace; font-size: 0.72em; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+.copy-btn { background: none; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: rgba(255,255,255,0.5); font-family: 'DM Mono', monospace; font-size: 0.85em; padding: 3px 10px; cursor: pointer; transition: all 0.15s; letter-spacing: 0.05em; }
+.copy-btn:hover { border-color: var(--orange); color: var(--orange); }
+.copy-btn.copied { border-color: #5fbb80; color: #5fbb80; }
+pre { background: var(--code-bg); padding: 20px 22px; overflow-x: auto; font-family: 'DM Mono', monospace; font-size: 0.85em; line-height: 1.7; color: var(--code-text); }
+.kw { color: #d4a0c0; } .fn { color: #e5a87f; } .str { color: #a8d8a8; }
+.num { color: #8ecfcf; } .cm { color: #a08890; font-style: italic; } .op { color: #e5c07b; }
+.note { background: var(--maroon-light); border-left: 4px solid var(--orange); border-radius: 0 8px 8px 0; padding: 12px 16px; font-size: 0.88em; color: #5a3040; line-height: 1.55; margin-bottom: 16px; }
+.note strong { color: var(--maroon); }
+.divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+.file-tree { background: var(--maroon-light); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; font-family: 'DM Mono', monospace; font-size: 0.85em; line-height: 1.8; color: var(--text); margin-bottom: 16px; }
+.file-tree .folder { color: var(--maroon); font-weight: 500; }
+.file-tree .highlight { color: var(--orange); font-weight: 500; }
+code { background: var(--maroon-mid); padding: 1px 5px; border-radius: 3px; font-family: 'DM Mono', monospace; font-size: 0.9em; }
+</style>
+</head>
+<body>
+
+<nav id="sidebar">
+  <div class="nav-brand">
+    <div class="nav-brand-title">Data Availability Workshop</div>
+    <div class="nav-brand-sub">DSPG 2026 · Virginia Tech</div>
+  </div>
+
+  <div class="nav-section-label">Setup</div>
+  <a href="#s0"><span class="nav-num">00</span> Folder Structure</a>
+  <a href="#s1"><span class="nav-num">01</span> Packages</a>
+  <a href="#s2"><span class="nav-num">02</span> Census API Key</a>
+
+  <div class="nav-section-label">API Demo</div>
+  <a href="#s3"><span class="nav-num">03</span> Single Data Pull</a>
+  <a href="#s4"><span class="nav-num">04</span> Multi-Year Download</a>
+
+  <div class="nav-section-label">Pipeline</div>
+  <a href="#s5"><span class="nav-num">05</span> Load Data</a>
+  <a href="#s6"><span class="nav-num">06</span> Find Variable Codes</a>
+  <a href="#s7"><span class="nav-num">07</span> Audit Availability</a>
+  <a href="#s8"><span class="nav-num">08</span> Labels & Categories</a>
+
+  <div class="nav-section-label">Dashboard</div>
+  <a href="#s9"><span class="nav-num">09</span> reactable Widget</a>
+  <a href="#s10"><span class="nav-num">10</span> Quarto Dashboard</a>
+  <a href="#s11"><span class="nav-num">11</span> Shiny App</a>
+  <a href="#s12"><span class="nav-num">12</span> R + Claude</a>
+</nav>
+
+<main>
+  <div class="page-header">
+    <h1>Workshop Code Reference</h1>
+    <p>All the code from today's workshop in one place. Copy and paste as you work through the exercise.</p>
+  </div>
+
+  <!-- 00 Folder Structure -->
+  <section class="section" id="s0">
+    <div class="section-header">
+      <span class="section-num">00</span>
+      <h2>Folder Structure</h2>
+    </div>
+    <p class="section-desc">All files must be in the same folder before you start.</p>
+    <div class="file-tree">
+      <span class="folder">DSPG26Data-Organization-Workshop-main/</span><br>
+      &nbsp;&nbsp;├── <span class="highlight">acs_virginia_raw.csv</span><br>
+      &nbsp;&nbsp;├── <span class="highlight">data_availability_workshop_reference.R</span><br>
+      &nbsp;&nbsp;├── <span class="highlight">data_availability_dashboard.qmd</span><br>
+      &nbsp;&nbsp;└── <span class="highlight">data_availability_dashboard_shinyapp.R</span>
+    </div>
+    <div class="note">Open RStudio → <strong>File → Open Project</strong> → select this folder. Your working directory will be set automatically.</div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- 01 Packages -->
+  <section class="section" id="s1">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2>Install & Load Packages</h2>
+    </div>
+    <p class="section-desc">Run the install line once. Load packages at the start of every session.</p>
+    <div class="code-block">
+      <div class="code-label">R <button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><span class="cm"># Install once</span>
+<span class="fn">install.packages</span>(<span class="fn">c</span>(<span class="str">"tidyverse"</span>, <span class="str">"tidycensus"</span>, <span class="str">"reactable"</span>,
+                   <span class="str">"htmlwidgets"</span>, <span class="str">"jsonlite"</span>, <span class="str">"shiny"</span>))
+
+<span class="cm"># Load every session — run this before anything else</span>
+<span class="fn">library</span>(<span class="str">tidyverse</span>)
+<span class="fn">library</span>(<span class="str">tidycensus</span>)
+<span class="fn">library</span>(<span class="str">reactable</span>)
+<span class="fn">library</span>(<span class="str">jsonlite</span>)</pre>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- 02 API Key -->
+  <section class="section" id="s2">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2>Census API Key</h2>
+    </div>
+    <p class="section-desc">Register your key once — it saves permanently to your machine. Get a free key at <a href="https://api.census.gov/data/key_signup.html" target="_blank">api.census.gov/data/key_signup.html</a>.</p>
+    <div class="code-block">
+      <div class="code-label">R <button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><span class="cm"># Replace with your actual key from api.census.gov/data/key_signup.html</span>
+<span class="fn">census_api_key</span>(<span class="str">"YOUR_API_KEY_HERE"</span>, install = <span class="kw">TRUE</span>)
+<span class="fn">readRenviron</span>(<span class="str">"~/.Renviron"</span>)
+
+<span class="cm"># Verify it worked — should return your key, not an empty string</span>
+<span class="fn">Sys.getenv</span>(<span class="str">"CENSUS_API_KEY"</span>)</pre>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- 03 Single Pull -->
+  <section class="section" id="s3">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2>Single Data Pull</h2>
+    </div>
+    <p class="section-desc">One function call, one variable, one year. This is the building block of everything else.</p>
+    <div class="code-block">
+      <div class="code-label">R <button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre>va_income <span class="op">&lt;-</span> <span class="fn">get_acs</span>(
+  geography <span class="op">=</span> <span class="str">"county"</span>,      <span class="cm"># unit of analysis</span>
+  variables <span class="op">=</span> <span class="str">"B19013_001"</span>,  <span class="cm"># ACS variable code</span>
+  state     <span class="op">=</span> <span class="str">"VA"</span>,          <span class="cm"># Virginia counties only</span>
+  year      <span class="op">=</span> <span class="num">2022</span>,          <span class="cm"># which year</span>
+  survey    <span class="op">=</span> <span class="str">"acs5"</span>         <span class="cm"># 5-year estimates</span>
+)
+
+<span class="fn">head</span>(va_income)
+<span class="cm"># Columns: GEOID, NAME, variable, estimate, moe</span>
+<span class="cm"># estimate = the ACS value · moe = margin of error</span></pre>
+    </div>
+    <div class="note"><strong>survey = "acs5"</strong> means 5-year estimates. Use <strong>"acs1"</strong> for 1-year, but only for areas with population &gt; 65,000.</div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- 04 Multi-Year Download -->
+  <section class="section" id="s4">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <h2>Multi-Year Download</h2>
+    </div>
+    <p class="section-desc">The full loop that created <code>acs_virginia_raw.csv</code>. Pull each variable separately so failures in one year don't block others. Takes several minutes.</p>
+    <div class="code-block">
+      <div class="code-label">R — reference only, do not run during workshop <button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre>vars  <span class="op">&lt;-</span> <span class="fn">c</span>(<span class="str">"B19013_001"</span>, <span class="str">"B17001_002"</span>, <span class="str">"B15003_022"</span>,
+           <span class="str">"B27001_001"</span>, <span class="str">"B01003_001"</span>, <span class="str">"B28002_004"</span>)
+years <span class="op">&lt;-</span> <span class="num">2010</span>:<span class="num">2023</span>
+
+raw_data <span class="op">&lt;-</span> <span class="fn">map_dfr</span>(vars, <span class="kw">function</span>(var) {
+  <span class="fn">map_dfr</span>(years, <span class="kw">function</span>(yr) {
+    <span class="fn">tryCatch</span>({
+      <span class="fn">get_acs</span>(geography <span class="op">=</span> <span class="str">"county"</span>, variables <span class="op">=</span> var,
+              state <span class="op">=</span> <span class="str">"VA"</span>, year <span class="op">=</span> yr, survey <span class="op">=</span> <span class="str">"acs5"</span>) <span class="op">|&gt;</span>
+        <span class="fn">mutate</span>(year <span class="op">=</span> yr)
+    }, error <span class="op">=</span> <span class="kw">function</span>(e) <span class="kw">NULL</span>)  <span class="cm"># skip silently if unavailable</span>
+  })
+})
+
+<span class="cm"># Save immediately — never have to re-run the loop</span>
+<span class="fn">write_csv</span>(raw_data, <span class="str">"acs_virginia_raw.csv"</span>)</pre>
+    </div>
+    <div class="note"><strong>tryCatch()</strong> handles errors gracefully — if a variable doesn't exist for a year (e.g. broadband before 2017), it returns NULL and skips instead of crashing.</div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- 05 Load Data -->
+  <section class="section" id="s5">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <h2>Load the Pre-Downloaded Data</h2>
+    </div>
+    <p class="section-desc">No API needed for today — load the CSV we prepared for you.</p>
+    <div class="code-block">
+      <div class="code-label">R <button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre>raw <span class="op">&lt;-</span> <span class="fn">read_csv</span>(<span class="str">"acs_virginia_raw.csv"</span>)
+
+<span class="fn">glimpse</span>(raw)
+<span class="cm"># 9,725 rows · 6 columns: GEOID, NAME, variable, estimate, moe, year</span></pre>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- 06 Find Variable Codes -->
+  <section class="section" id="s6">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <h2>Find Variable Codes</h2>
+    </div>
+    <p class="section-desc">ACS codes follow a pattern: <code>B19013_001</code> = Table B19013, Cell 001. Search with <code>load_variables()</code>.</p>
+    <div class="code-block">
+      <div class="code-label">R <button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre>vars_lookup <span class="op">&lt;-</span> <span class="fn">load_variables</span>(<span class="num">2022</span>, <span class="str">"acs5"</span>, cache = <span class="kw">TRUE</span>)
+
+<span class="cm"># Search by keyword — opens as a spreadsheet in RStudio</span>
+vars_lookup <span class="op">|&gt;</span>
+  <span class="fn">filter</span>(<span class="fn">str_detect</span>(label, <span class="str">"income|Income"</span>)) <span class="op">|&gt;</span>
+  <span class="fn">select</span>(name, label, concept) <span class="op">|&gt;</span>
+  <span class="fn">head</span>(<span class="num">10</span>) <span class="op">|&gt;</span>
+  <span class="fn">View</span>()</pre>
+    </div>
+    <div class="note"><strong>concept</strong> = the table name &nbsp;·&nbsp; <strong>name</strong> = the code you use in get_acs() &nbsp;·&nbsp; <strong>label</strong> = what it measures</div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- 07 Audit -->
+  <section class="section" id="s7">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <h2>Audit Variable Availability</h2>
+    </div>
+    <p class="section-desc">Check which variables exist in which years — directly from the CSV, no API calls needed.</p>
+    <div class="code-block">
+      <div class="code-label">R <button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><span class="cm"># What actually exists in the CSV</span>
+years_in_data <span class="op">&lt;-</span> raw <span class="op">|&gt;</span>
+  <span class="fn">distinct</span>(variable, year)
+
+<span class="cm"># All possible combinations (6 variables × 14 years = 84 rows)</span>
+all_combos <span class="op">&lt;-</span> <span class="fn">expand_grid</span>(
+  variable <span class="op">=</span> <span class="fn">unique</span>(raw<span class="op">$</span>variable),
+  year     <span class="op">=</span> <span class="num">2010</span>:<span class="num">2023</span>
+)
+
+<span class="cm"># Join — missing combinations become FALSE</span>
+audit_results <span class="op">&lt;-</span> all_combos <span class="op">|&gt;</span>
+  <span class="fn">left_join</span>(
+    years_in_data <span class="op">|&gt;</span> <span class="fn">mutate</span>(available <span class="op">=</span> <span class="kw">TRUE</span>),
+    by <span class="op">=</span> <span class="fn">c</span>(<span class="str">"variable"</span>, <span class="str">"year"</span>)
+  ) <span class="op">|&gt;</span>
+  <span class="fn">mutate</span>(available <span class="op">=</span> <span class="fn">replace_na</span>(available, <span class="kw">FALSE</span>))</pre>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- 08 Labels -->
+  <section class="section" id="s8">
+    <div class="section-header">
+      <span class="section-num">08</span>
+      <h2>Add Labels & Categories</h2>
+    </div>
+    <p class="section-desc">Map variable codes to human-readable labels and thematic categories.</p>
+    <div class="code-block">
+      <div class="code-label">R <button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre>var_metadata <span class="op">&lt;-</span> <span class="fn">tibble</span>(
+  variable <span class="op">=</span> <span class="fn">c</span>(<span class="str">"B19013_001"</span>, <span class="str">"B17001_002"</span>, <span class="str">"B15003_022"</span>,
+               <span class="str">"B27001_001"</span>, <span class="str">"B01003_001"</span>, <span class="str">"B28002_004"</span>),
+  label    <span class="op">=</span> <span class="fn">c</span>(<span class="str">"Median Household Income"</span>, <span class="str">"Population Below Poverty"</span>,
+               <span class="str">"Bachelor's Degree"</span>, <span class="str">"Health Insurance Universe"</span>,
+               <span class="str">"Total Population"</span>, <span class="str">"Broadband Access"</span>),
+  category <span class="op">=</span> <span class="fn">c</span>(<span class="str">"Socioeconomic"</span>, <span class="str">"Socioeconomic"</span>, <span class="str">"Socioeconomic"</span>,
+               <span class="str">"Healthcare Access"</span>, <span class="str">"Demographics"</span>, <span class="str">"Infrastructure"</span>)
+)
+
+audit_final <span class="op">&lt;-</span> audit_results <span class="op">|&gt;</span>
+  <span class="fn">left_join</span>(var_metadata, by <span class="op">=</span> <span class="str">"variable"</span>) <span class="op">|&gt;</span>
+  <span class="fn">group_by</span>(variable, label, category) <span class="op">|&gt;</span>
+  <span class="fn">summarise</span>(
+    n_years       <span class="op">=</span> <span class="fn">sum</span>(available),
+    years_present <span class="op">=</span> <span class="fn">list</span>(year[available <span class="op">==</span> <span class="kw">TRUE</span>]),
+    missing_years <span class="op">=</span> <span class="fn">list</span>(year[available <span class="op">==</span> <span class="kw">FALSE</span>]),
+    .groups <span class="op">=</span> <span class="str">"drop"</span>
+  )
+
+<span class="cm"># Save for dashboard QMD and Shiny app</span>
+<span class="fn">saveRDS</span>(audit_final, <span class="str">"audit_final.rds"</span>)</pre>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- 09 reactable -->
+  <section class="section" id="s9">
+    <div class="section-header">
+      <span class="section-num">09</span>
+      <h2>Option 1 — reactable Widget</h2>
+    </div>
+    <p class="section-desc">Quickest option. Produces a standalone HTML file that works offline.</p>
+    <div class="code-block">
+      <div class="code-label">R <button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><span class="fn">library</span>(<span class="str">htmlwidgets</span>)
+
+widget <span class="op">&lt;-</span> <span class="fn">reactable</span>(
+  audit_final,
+  filterable <span class="op">=</span> <span class="kw">TRUE</span>,
+  searchable <span class="op">=</span> <span class="kw">TRUE</span>
+)
+
+<span class="fn">saveWidget</span>(widget, <span class="str">"data_availability.html"</span>, selfcontained <span class="op">=</span> <span class="kw">TRUE</span>)</pre>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- 10 QMD -->
+  <section class="section" id="s10">
+    <div class="section-header">
+      <span class="section-num">10</span>
+      <h2>Option 2 — Quarto Dashboard</h2>
+    </div>
+    <p class="section-desc">Styled VT-colored table. Requires <code>audit_final.rds</code> — run Step 08 first.</p>
+    <div class="code-block">
+      <div class="code-label">R <button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><span class="cm"># Run Step 08 first to create audit_final.rds, then:</span>
+quarto<span class="op">::</span><span class="fn">quarto_render</span>(<span class="str">"data_availability_dashboard.qmd"</span>)
+
+<span class="cm"># Open data_availability_dashboard.html in your browser</span></pre>
+    </div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- 11 Shiny -->
+  <section class="section" id="s11">
+    <div class="section-header">
+      <span class="section-num">11</span>
+      <h2>Option 3 — Shiny App</h2>
+    </div>
+    <p class="section-desc">Live reactive filtering inside RStudio. Requires <code>audit_final.rds</code> — run Step 08 first.</p>
+    <div class="code-block">
+      <div class="code-label">R <button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><span class="cm"># Run Step 08 first to create audit_final.rds, then:</span>
+shiny<span class="op">::</span><span class="fn">runApp</span>(<span class="str">"data_availability_dashboard_shinyapp.R"</span>)</pre>
+    </div>
+    <div class="note"><strong>Note:</strong> Shiny requires R to be running. Unlike Options 1 and 2, it cannot be saved as a standalone file.</div>
+  </section>
+
+  <hr class="divider">
+
+  <!-- 12 Claude -->
+  <section class="section" id="s12">
+    <div class="section-header">
+      <span class="section-num">12</span>
+      <h2>Option 4 — R + Claude</h2>
+    </div>
+    <p class="section-desc">Export JSON from R, paste into Claude with the prompt below to generate a polished color-coded dashboard.</p>
+    <div class="code-block">
+      <div class="code-label">R — Export JSON <button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre><span class="fn">cat</span>(<span class="fn">toJSON</span>(audit_final <span class="op">|&gt;</span>
+  <span class="fn">mutate</span>(
+    years_present <span class="op">=</span> <span class="fn">map</span>(years_present, as.integer),
+    missing_years <span class="op">=</span> <span class="fn">map</span>(missing_years, as.integer)
+  ), pretty <span class="op">=</span> <span class="kw">TRUE</span>))</pre>
+    </div>
+    <div class="code-block">
+      <div class="code-label">Claude Prompt — paste your JSON at the bottom <button class="copy-btn" onclick="copyCode(this)">copy</button></div>
+      <pre style="color:#d4c8cc;">You are a data visualization expert. I have audited variable
+availability in ACS 5-year estimates for Virginia counties
+from 2010-2023. Below is a JSON file with the results.
+
+Please create a single self-contained interactive HTML dashboard that shows:
+- A grid where rows = variables and columns = years
+- Color-coded cells by category (filled = available, grey = missing)
+- Hover tooltips showing variable name, category, years present, and missing years
+- Filter buttons by coverage (full/partial) and by category
+- A summary stats bar at the top
+
+Use Virginia Tech colors: maroon (#861F41), orange (#E5751F),
+white background. Make it clean, professional, and suitable
+for a research presentation.
+
+Here is the JSON data: [PASTE YOUR JSON HERE]</pre>
+    </div>
+  </section>
+
+</main>
+
+<script>
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).then(() => {
+    btn.textContent = 'copied ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+const sections = document.querySelectorAll('.section');
+const navLinks  = document.querySelectorAll('nav a');
+const observer  = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector(`nav a[href="#${entry.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
