@@ -261,9 +261,6 @@ audit_results <- all_combos |>
 | B27001_001 | ⚠️ 12/14 | 2010–2011 |
 | **B28002_004** | **⚠️ 7/14** | **2010–2016** |
 
-::: {.note}
-If your project needs broadband data, your analysis window starts in 2017 — not 2010.
-:::
 
 ---
 
