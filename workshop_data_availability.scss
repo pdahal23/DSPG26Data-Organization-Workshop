@@ -743,3 +743,27 @@ $presentation-font-size-root: 26px;
 
   text-decoration: underline;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   THREE COLUMN DASHBOARD OPTIONS
+───────────────────────────────────────────────────────────── */
+
+.contrib-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  margin-top: 8px;
+}
+
+.contrib-grid-3 .contrib-column {
+  min-width: 0;
+  min-height: auto;
+}
+
+.contrib-grid-3 pre code {
+  font-size: 0.62em;
+}
+
+.contrib-grid-3 .contrib-heading {
+  font-size: 0.9em;
+}

@@ -124,7 +124,7 @@ Output: GEOID, NAME, variable, estimate, moe — exactly what is in acs_virginia
 ::: {.mini-heading}
 Pull each variable separately — loop over years
 :::
-This is what produced `acs_virginia_raw.csv`. 
+This is what produced `acs_virginia_raw.csv`.
 :::
 
 ```r
@@ -213,7 +213,7 @@ vars |>
   filter(str_detect(label, "income|Income")) |>
   select(name, label, concept) |>
   head(10) |>
-  view()
+  View()
 ```
 
 ::: {.note}
@@ -261,6 +261,9 @@ audit_results <- all_combos |>
 | B27001_001 | ⚠️ 12/14 | 2010–2011 |
 | **B28002_004** | **⚠️ 7/14** | **2010–2016** |
 
+::: {.note}
+If your project needs broadband data, your analysis window starts in 2017 — not 2010.
+:::
 
 ---
 
@@ -286,18 +289,41 @@ audit_final <- audit_results |>
     missing_years = list(year[available == FALSE]),
     .groups = "drop"
   )
+
+# Save so the dashboard QMD can load it
+saveRDS(audit_final, "audit_final.rds")
 ```
 
 ---
 
 ## Building the Dashboard
 
-::: {.contrib-grid}
+::: {.contrib-grid-3}
 ::: {.contrib-column}
 ::: {.contrib-heading}
-Track A — Pure R + QMD
+Option 1 — reactable widget
 :::
-Once you have `audit_final`, render the Quarto dashboard:
+```r
+library(reactable)
+library(htmlwidgets)
+
+widget <- reactable(
+  audit_final,
+  filterable = TRUE,
+  searchable = TRUE
+)
+
+saveWidget(widget,
+  "data_availability.html")
+```
+Quick, functional, shareable. No AI needed.
+:::
+
+::: {.contrib-column}
+::: {.contrib-heading}
+Option 2 — Quarto Dashboard
+:::
+First run the exercise script to create `audit_final.rds`, then:
 
 ```r
 quarto::quarto_render(
@@ -305,17 +331,13 @@ quarto::quarto_render(
 )
 ```
 
-This produces a styled interactive HTML table using `reactable` — no AI needed.
-
 Open `data_availability_dashboard.html` in your browser.
 :::
 
 ::: {.contrib-column}
 ::: {.contrib-heading}
-Track B — R + Claude
+Option 3 — R + Claude
 :::
-Export `audit_final` as JSON:
-
 ```r
 library(jsonlite)
 
@@ -327,8 +349,7 @@ cat(toJSON(audit_final |>
       map(missing_years, as.integer)
   ), pretty = TRUE))
 ```
-
-Copy the output → paste into Claude with the prompt on the next slide.
+Copy JSON → paste into Claude with the prompt on the next slide.
 :::
 :::
 
@@ -358,8 +379,65 @@ for a research presentation.
 
 Here is the JSON data: [PASTE YOUR JSON HERE]
 ```
+
 ::: {.note}
 The more specific your prompt, the better the output. Mention colors, layout, interactivity.
+:::
+
+---
+
+## Now You Try {background-color="#861F41"}
+
+::: {.workflow}
+::: {.workflow-step}
+::: {.step-number}
+1
+:::
+::: {.card-title}
+Open
+:::
+Open `workshop_exercise.R`
+:::
+::: {.workflow-step}
+::: {.step-number}
+2
+:::
+::: {.card-title}
+Load
+:::
+Load `acs_virginia_raw.csv`
+:::
+::: {.workflow-step}
+::: {.step-number}
+3
+:::
+::: {.card-title}
+Fill
+:::
+Fill 3 gaps marked `YOUR CODE HERE`
+:::
+::: {.workflow-step}
+::: {.step-number}
+4
+:::
+::: {.card-title}
+Build
+:::
+Choose Option 1, 2, or 3
+:::
+::: {.workflow-step}
+::: {.step-number}
+5
+:::
+::: {.card-title}
+Share
+:::
+Open your dashboard in the browser
+:::
+:::
+
+::: {.note}
+Solution is in `workshop_solution.R` if you get stuck.
 :::
 
 ---
@@ -408,14 +486,14 @@ What you learned today
 - How ACS data is pulled using `tidycensus` and why variables have different year coverage
 - How to audit data availability from a CSV using `distinct()` and `left_join()`
 - How to document findings with human-readable labels and categories
-- How to turn your audit into a shareable HTML dashboard — two ways
+- How to turn your audit into a shareable HTML dashboard — three ways
 :::
 
 ::: {.scope-conditional}
 ::: {.mini-heading}
 The pipeline
 :::
-`acs_virginia_raw.csv` → `audit_results` → `audit_final` → QMD dashboard / Claude → HTML
+`acs_virginia_raw.csv` → `audit_results` → `audit_final` → reactable / QMD / Claude → HTML
 :::
 
 ---
