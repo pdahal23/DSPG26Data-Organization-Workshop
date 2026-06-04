@@ -1217,7 +1217,9 @@ margin-right: 0; }
 <span id="cb4-3"><a href aria-hidden="true" tabindex="-1"></a><span class="co"># Search by keyword</span></span>
 <span id="cb4-4"><a href aria-hidden="true" tabindex="-1"></a>vars <span class="sc">|&gt;</span></span>
 <span id="cb4-5"><a href aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(label, <span class="st">&quot;income|Income&quot;</span>)) <span class="sc">|&gt;</span></span>
-<span id="cb4-6"><a href aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(name, label, concept)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-6"><a href aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(name, label, concept) <span class="sc">|&gt;</span></span>
+<span id="cb4-7"><a href aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>(<span class="dv">10</span>) <span class="sc">|&gt;</span></span>
+<span id="cb4-8"><a href aria-hidden="true" tabindex="-1"></a>  <span class="fu">view</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="note">
 <p>Always check the <code>concept</code> column — it tells you which table the variable belongs to.</p>
 </div>
@@ -1255,32 +1257,32 @@ margin-right: 0; }
 </thead>
 <tbody>
 <tr class="odd">
-<td>Total Population</td>
+<td>B01003_001</td>
 <td>✅ 14/14</td>
 <td>—</td>
 </tr>
 <tr class="even">
-<td>Median Household Income</td>
+<td>B19013_001</td>
 <td>✅ 14/14</td>
 <td>—</td>
 </tr>
 <tr class="odd">
-<td>Population Below Poverty</td>
+<td>B17001_002</td>
 <td>✅ 14/14</td>
 <td>—</td>
 </tr>
 <tr class="even">
-<td>Bachelor’s Degree</td>
+<td>B15003_022</td>
 <td>⚠️ 12/14</td>
 <td>2010–2011</td>
 </tr>
 <tr class="odd">
-<td>Health Insurance Universe</td>
+<td>B27001_001</td>
 <td>⚠️ 12/14</td>
 <td>2010–2011</td>
 </tr>
 <tr class="even">
-<td><strong>Broadband Access</strong></td>
+<td><strong>B28002_004</strong></td>
 <td><strong>⚠️ 7/14</strong></td>
 <td><strong>2010–2016</strong></td>
 </tr>

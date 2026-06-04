@@ -211,7 +211,9 @@ vars <- load_variables(2022, "acs5", cache = TRUE)
 # Search by keyword
 vars |>
   filter(str_detect(label, "income|Income")) |>
-  select(name, label, concept)
+  select(name, label, concept) |>
+  head(10) |>
+  view()
 ```
 
 ::: {.note}
@@ -252,12 +254,12 @@ audit_results <- all_combos |>
 
 | Variable | Coverage | Missing Years |
 |----------|----------|---------------|
-| Total Population | ✅ 14/14 | — |
-| Median Household Income | ✅ 14/14 | — |
-| Population Below Poverty | ✅ 14/14 | — |
-| Bachelor's Degree | ⚠️ 12/14 | 2010–2011 |
-| Health Insurance Universe | ⚠️ 12/14 | 2010–2011 |
-| **Broadband Access** | **⚠️ 7/14** | **2010–2016** |
+| B01003_001 | ✅ 14/14 | — |
+| B19013_001 | ✅ 14/14 | — |
+| B17001_002 | ✅ 14/14 | — |
+| B15003_022 | ⚠️ 12/14 | 2010–2011 |
+| B27001_001 | ⚠️ 12/14 | 2010–2011 |
+| **B28002_004** | **⚠️ 7/14** | **2010–2016** |
 
 
 ---
