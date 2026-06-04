@@ -418,7 +418,7 @@ cat(toJSON(
 # To apply this pipeline to your own project:
 #
 # 1. Identify which variables you need from your project proposal
-# 2. Find the ACS codes using load_variables() — search by keyword
+# 2. Find the codes using load_variables() — search by keyword
 # 3. Run the download loop (Section 3) with your variables
 # 4. Run the audit (Section 5) to check year coverage
 # 5. Add your own labels and categories (Section 6)
