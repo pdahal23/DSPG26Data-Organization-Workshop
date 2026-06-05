@@ -360,16 +360,13 @@ cat(toJSON(audit_final |>
 Copy JSON → paste into Claude with the prompt on the next slide → polished color-coded HTML dashboard.
 :::
 :::
-::: {.note}
-Claude can help create beautiful looking interactive dashboard.
-The more specific your prompt, the better the output.
-:::
 ---
 
 ## The Claude Prompt
 
 ::: {.scope-core}
 ```
+You are a data visualization expert.
 Create a self-contained interactive HTML dashboard for an ACS variable availability audit.
 
 STYLE
@@ -398,7 +395,8 @@ DATA
 :::
 
 ::: {.note}
-The more specific your prompt, the better the output. Mention colors, layout, interactivity.
+Claude can help create beautiful looking interactive dashboard.
+The more specific your prompt, the better the output. 
 :::
 
 ---
@@ -430,10 +428,6 @@ Step 4 — Document
 :::
 Add your own labels and categories. Save the audit script — this is part of your project documentation.
 :::
-:::
-
-::: {.note}
-Rural Health & AVI teams: broadband analysis window starts in 2017, not 2010.
 :::
 
 ---
