@@ -194,34 +194,6 @@ What you will see
 
 ---
 
-## Finding Variable Codes
-
-::: {.scope-core}
-::: {.mini-heading}
-ACS variables follow a pattern: Table + Cell number
-:::
-`B19013_001` = Table B19013 (Median Household Income), Cell 001
-
-When you do your own project pull, use `load_variables()` to search:
-:::
-
-```r
-vars <- load_variables(2022, "acs5", cache = TRUE)
-
-# Search by keyword
-vars |>
-  filter(str_detect(label, "income|Income")) |>
-  select(name, label, concept) |>
-  head(10) |>
-  View()
-```
-
-::: {.note}
-Always check the `concept` column — it tells you which table the variable belongs to.
-:::
-
----
-
 ## Auditing Availability from the CSV
 
 ::: {.scope-core}
@@ -247,20 +219,6 @@ audit_results <- all_combos |>
             by = c("variable", "year")) |>
   mutate(available = replace_na(available, FALSE))
 ```
-
----
-
-## What the Audit Reveals
-
-| Variable | Coverage | Missing Years |
-|----------|----------|---------------|
-| B01003_001 | ✅ 14/14 | — |
-| B19013_001 | ✅ 14/14 | — |
-| B17001_002 | ✅ 14/14 | — |
-| B15003_022 | ⚠️ 12/14 | 2010–2011 |
-| B27001_001 | ⚠️ 12/14 | 2010–2011 |
-| **B28002_004** | **⚠️ 7/14** | **2010–2016** |
-
 
 ---
 
@@ -344,7 +302,9 @@ Option 3 — Shiny App
 Make sure `audit_final.rds` exists, then:
 
 ```r
-shiny::runApp("data_availability_dashboard_shinyapp.R")
+shiny::runApp(
+  "data_availability_dashboard_shinyapp.R"
+)
 ```
 
 Live reactive filtering — filters update instantly without re-rendering. Runs in RStudio. Good Shiny practice.
@@ -377,27 +337,30 @@ Copy JSON → paste into Claude with the prompt on the next slide → polished c
 
 ## The Claude Prompt
 
-::: {.note}
-Select all the text in the box, copy, paste into Claude, then add your JSON at the bottom.
-:::
-
 ```markdown
-You are a data visualization expert. I have audited variable
-availability in ACS 5-year estimates for Virginia counties
-from 2010–2023. Below is a JSON file with the results.
+Create a self-contained interactive HTML dashboard for an ACS variable availability audit.
 
-Please create a single self-contained interactive HTML dashboard that shows:
-- A grid where rows = variables and columns = years
-- Color-coded cells by category (filled = available, grey = missing)
-- Hover tooltips showing variable name, category, years present, and missing years
-- Filter buttons by coverage (full/partial) and by category
-- A summary stats bar at the top
+STYLE
+- Virginia Tech colors: maroon #861F41, orange #E5751F, cream background
+- Fonts: Cormorant Garamond (headings), JetBrains Mono (code), DM Sans (body)
 
-Use Virginia Tech colors: maroon (#861F41), orange (#E5751F),
-white background. Make it clean, professional, and suitable
-for a research presentation.
+LAYOUT
+- Dark maroon hero header with grid texture, italic serif title, monospace metadata
+- White stat bar: total variables, full/partial counts, animated fill-rate progress bar
+- Filter pills: coverage (All / Full / Partial) and category — each category in its own color
+- Grid: left column shows variable name, ACS code, category badge, mini progress bar
+  Year columns show filled colored squares (available) or dashed grey squares (missing)
+- Tooltip on hover: variable name, year status (✓/✗), coverage fraction, missing years as chips
+- Footer with institution name and data source
 
-Here is the JSON data: [PASTE YOUR JSON HERE]
+RULES
+- Vanilla JS only, no libraries
+- Each category gets a distinct color across cells, badges, pills, and progress bars
+- Tooltip repositions to stay in viewport
+- Filters show empty state when nothing matches
+- Fill-rate bar animates on load
+
+DATA [Paste JSON here]
 ```
 
 ::: {.note}
