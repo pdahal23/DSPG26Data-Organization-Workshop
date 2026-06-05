@@ -47,7 +47,7 @@ By the end of this workshop, you will be able to:
 :::
 
 ::: {.note}
-Before we start — open the finished dashboard in your browser. That is where we are going.
+Before we start — lets see the finished dashboard. That is where we are going.
 :::
 
 ---
@@ -59,16 +59,16 @@ Before we start — open the finished dashboard in your browser. That is where w
 The problem
 :::
 Before you clean your data, you need to know what you actually have.
-If a variable only exists for 7 out of 14 years — you need to know that *before* you spend hours cleaning it.
+If a variable is missing for a few years — you need to know that *before* you spend hours cleaning it.
 :::
 
 ::: {.scope-conditional}
 ::: {.mini-heading}
 Today's step
 :::
-**Raw Data → [YOU ARE HERE] → Cleaning → Analysis → Report**
+**Raw Data → [WE ARE HERE] → Cleaning → Analysis → Report**
 
-The step between downloading data and cleaning it is usually skipped. Today we make it explicit.
+The step between downloading data and cleaning it is usually ignored. Today we make it explicit.
 :::
 
 ---
@@ -83,20 +83,20 @@ Instructor Demo
 How the Data Was Downloaded
 :::
 ::: {style="font-size: 0.9em; opacity: 0.75; margin-top: 16px;"}
-You can try to use API for today's workshop, there is a downloaded file that we can use — but try to understand what the API did.
+You can try to use API for today's workshop, there will be a separate workshop for this.
+There is a downloaded file that we can use — but still let's try to understand what the API did.
 :::
 :::
 
 ---
 
-## How ACS Data Is Pulled with tidycensus
+## How ACS Data Is Pulled with tidycensus (One Variable, One Year)
 
 ::: {.scope-core}
 ::: {.mini-heading}
 This is how acs_virginia_raw.csv was created
 :::
 `tidycensus` sends a request to the Census API and returns a clean dataframe.
-One function call, one year, one variable:
 :::
 
 ```r
@@ -194,13 +194,41 @@ What you will see
 
 ---
 
+## Finding Variable Codes
+
+::: {.scope-core}
+::: {.mini-heading}
+ACS variables follow a pattern: Table + Cell number
+:::
+`B19013_001` = Table B19013 (Median Household Income), Cell 001
+
+**Not sure which code to use?** Search by keyword with `load_variables()`:
+:::
+
+```r
+vars <- load_variables(2022, "acs5", cache = TRUE)
+
+# Search by keyword — change "income|Income" to your topic
+vars |>
+  filter(str_detect(label, "income|Income")) |>
+  select(name, label, concept) |>
+  head(10) |>
+  View()
+```
+
+::: {.note}
+`name` = the code you use in get_acs() · `label` = what it measures · `concept` = which table it belongs to. No API key needed for `load_variables()`.
+:::
+
+---
+
 ## Auditing Availability from the CSV
 
 ::: {.scope-core}
 ::: {.mini-heading}
 Which variables exist in which years?
 :::
-Instead of making API calls, we check the CSV directly.
+Instead of making API calls, lets check the CSV directly.
 `distinct()` gives us every variable-year combination that actually exists.
 We compare against the full 2010–2023 range to find the gaps.
 :::
@@ -332,12 +360,16 @@ cat(toJSON(audit_final |>
 Copy JSON → paste into Claude with the prompt on the next slide → polished color-coded HTML dashboard.
 :::
 :::
-
+::: {.note}
+Claude can help create beautiful looking interactive dashboard.
+The more specific your prompt, the better the output.
+:::
 ---
 
 ## The Claude Prompt
 
-```markdown
+::: {.scope-core}
+```
 Create a self-contained interactive HTML dashboard for an ACS variable availability audit.
 
 STYLE
@@ -350,7 +382,7 @@ LAYOUT
 - Filter pills: coverage (All / Full / Partial) and category — each category in its own color
 - Grid: left column shows variable name, ACS code, category badge, mini progress bar
   Year columns show filled colored squares (available) or dashed grey squares (missing)
-- Tooltip on hover: variable name, year status (✓/✗), coverage fraction, missing years as chips
+- Tooltip on hover: variable name, year status (checkmark/x), coverage fraction, missing years as chips
 - Footer with institution name and data source
 
 RULES
@@ -360,8 +392,10 @@ RULES
 - Filters show empty state when nothing matches
 - Fill-rate bar animates on load
 
-DATA [Paste JSON here]
+DATA
+[Paste JSON here]
 ```
+:::
 
 ::: {.note}
 The more specific your prompt, the better the output. Mention colors, layout, interactivity.
@@ -396,6 +430,10 @@ Step 4 — Document
 :::
 Add your own labels and categories. Save the audit script — this is part of your project documentation.
 :::
+:::
+
+::: {.note}
+Rural Health & AVI teams: broadband analysis window starts in 2017, not 2010.
 :::
 
 ---
