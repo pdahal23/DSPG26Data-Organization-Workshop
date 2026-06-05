@@ -97,7 +97,7 @@ code { background: var(--maroon-mid); padding: 1px 5px; border-radius: 3px; font
     <div class="file-tree">
       <span class="folder">DSPG26Data-Organization-Workshop-main/</span><br>
       &nbsp;&nbsp;├── <span class="highlight">acs_virginia_raw.csv</span><br>
-      &nbsp;&nbsp;├── <span class="highlight">data_availability_workshop_reference.R</span><br>
+      &nbsp;&nbsp;├── <span class="highlight">data_availability_workshop_exercise.R</span><br>
       &nbsp;&nbsp;├── <span class="highlight">data_availability_dashboard.qmd</span><br>
       &nbsp;&nbsp;└── <span class="highlight">data_availability_dashboard_shinyapp.R</span>
     </div>
@@ -393,18 +393,29 @@ shiny<span class="op">::</span><span class="fn">runApp</span>(<span class="str">
 availability in ACS 5-year estimates for Virginia counties
 from 2010-2023. Below is a JSON file with the results.
 
-Please create a single self-contained interactive HTML dashboard that shows:
-- A grid where rows = variables and columns = years
-- Color-coded cells by category (filled = available, grey = missing)
-- Hover tooltips showing variable name, category, years present, and missing years
-- Filter buttons by coverage (full/partial) and by category
-- A summary stats bar at the top
+Create a self-contained interactive HTML dashboard for an ACS variable availability audit.
 
-Use Virginia Tech colors: maroon (#861F41), orange (#E5751F),
-white background. Make it clean, professional, and suitable
-for a research presentation.
+STYLE
+- Virginia Tech colors: maroon #861F41, orange #E5751F, cream background
+- Fonts: Cormorant Garamond (headings), JetBrains Mono (code), DM Sans (body)
 
-Here is the JSON data: [PASTE YOUR JSON HERE]</pre>
+LAYOUT
+- Dark maroon hero header with grid texture, italic serif title, monospace metadata
+- White stat bar: total variables, full/partial counts, animated fill-rate progress bar
+- Filter pills: coverage (All / Full / Partial) and category — each category in its own color
+- Grid: left column shows variable name, ACS code, category badge, mini progress bar
+  Year columns show filled colored squares (available) or dashed grey squares (missing)
+- Tooltip on hover: variable name, year status (✓/✗), coverage fraction, missing years as chips
+- Footer with institution name and data source
+
+RULES
+- Vanilla JS only, no libraries
+- Each category gets a distinct color across cells, badges, pills, and progress bars
+- Tooltip repositions to stay in viewport
+- Filters show empty state when nothing matches
+- Fill-rate bar animates on load
+
+DATA [Paste JSON here]</pre>
     </div>
   </section>
 
